@@ -24,6 +24,9 @@ uint8_t call_status_pump();
 extern float ec_value;
 extern float ph_value;
 
+extern uint16_t Day_Index;
+extern bool load_day;
+
 
 void task_feeding_all();
 

@@ -19,6 +19,9 @@ uint8_t contain_mode = 0; //day=1,night=2,unplant=0
 bool loop_dosing = false;
 float ph_check_err;
 
+uint16_t Day_Index = 0;
+bool load_day = false;
+
 
 //use fill
 void SETFILL(uint8_t pin, bool val,char* info)
@@ -63,42 +66,101 @@ uint8_t call_water_lv()
 
 uint8_t call_status_pump()
 {
+        if(_environment.pump_water_state==2)
+        {
+                if (load_day)
+                {
+                        // printf("save_working\n");
+                        working_timer.working_nextday = Day_Index + working_timer.working_day;
+                        save_working(working_timer);
+                        load_day = false;
+                        // printf("Day_Index %d , working_nextday %d\n", Day_Index,working_timer.working_nextday);
+                }
 
-        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
-                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
-        {
-                if(working_timer.status_timer[0] == 1)
+                if (working_timer.working_day == 0 )
                 {
-                        return 1;
+                        printf("-------------------------------------------------------Every day\n");
+                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
+                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
+                        {
+                                if(working_timer.status_timer[0] == 1)
+                                {
+                                        return 1;
+
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
+                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
+                        {
+                                if(working_timer.status_timer[1] == 1)
+                                {
+                                        return 2;
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
+                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
+                        {
+                                if(working_timer.status_timer[2] == 1)
+                                {
+                                        return 3;
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
+                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
+                        {
+                                if(working_timer.status_timer[3] == 1)
+                                {
+                                        return 4;
+                                }
+                        }
+                        else return 0;
+                }
+                else if (Day_Index == working_timer.working_nextday)
+                {
+                        printf("-------------------------------------------------------Some day\n");
+                        working_timer.working_nextday = Day_Index + working_timer.working_day;
+                        working_timer.working_lastday = Day_Index;
+                        save_working(working_timer);
+
+                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
+                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
+                        {
+                                if(working_timer.status_timer[0] == 1)
+                                {
+                                        return 1;
+
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
+                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
+                        {
+                                if(working_timer.status_timer[1] == 1)
+                                {
+                                        return 2;
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
+                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
+                        {
+                                if(working_timer.status_timer[2] == 1)
+                                {
+                                        return 3;
+                                }
+                        }
+                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
+                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
+                        {
+                                if(working_timer.status_timer[3] == 1)
+                                {
+                                        return 4;
+                                }
+                        }
+                        else return 0;
 
                 }
-                else
         }
-        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
-                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
-        {
-                if(working_timer.status_timer[1] == 1)
-                {
-                        return 2;
-                }
-        }
-        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
-                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
-        {
-                if(working_timer.status_timer[2] == 1)
-                {
-                        return 3;
-                }
-        }
-        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
-                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
-        {
-                if(working_timer.status_timer[3] == 1)
-                {
-                        return 4;
-                }
-        }
-        else return 0;
+        else if(_environment.pump_water_state==1) return 5;
+        else return 6;
 
         return 0;
 }
@@ -144,11 +206,11 @@ time_t feed_stamp;
 
 void task_feeding_all()
 {
-        printf("\n################### FEEDING #######################\n");
-        printf("Feeding stamp ph : %ld,%ld,%ld\n", feed_stamp,buf_ontimepH,buf_wating_time_ph);
-        printf("Feeding stamp ec : %ld,%ld,%ld,%ld,%ld,%ld\n", feed_stamp,buf_ontimeA,buf_ontimeB,
-               buf_ontimeC,buf_ontimeD,buf_wating_time);
-        printf("###################################################\n\n");
+        // printf("\n################### FEEDING #######################\n");
+        // printf("Feeding stamp ph : %ld,%ld,%ld\n", feed_stamp,buf_ontimepH,buf_wating_time_ph);
+        // printf("Feeding stamp ec : %ld,%ld,%ld,%ld,%ld,%ld\n", feed_stamp,buf_ontimeA,buf_ontimeB,
+        //        buf_ontimeC,buf_ontimeD,buf_wating_time);
+        // printf("###################################################\n\n");
         // printf("EC setpoint->%0.2f", ec_setpoint);
         // printf(" value->%0.2f", ec_value);
         // printf(" diff->%0.2f>%0.2f\n", ec_setpoint - ec_value, below_setpoint_ec);
@@ -608,7 +670,17 @@ wait_time:
 
                 // printf("Debug---> case fer_ok\n");
 
-                if (ec_value < ec_setpoint && (ec_setpoint - ec_value) > below_setpoint_ec)
+                //return ec to task feeding
+                ec_setpoint = ferti_set_val.ec_set_point/10.0;
+                //return ph to task feeding
+                ph_setpoint = ferti_set_val.ph_set_point/10.0;
+                //return ratio a:b:c:d to task feeding
+                for(uint8_t i = 0; i<4; i++)
+                {
+                        ratio_time[i]=ferti_set_val.ratio_fer[i];
+                }
+
+                if (ec_value < ec_setpoint && (ec_setpoint - ec_value) > below_setpoint_ec && ec_setpoint!=0.0)
                 {
                         // printf("EC setpoint->%0.2f", ec_setpoint);
                         // printf(" value->%0.2f", ec_value);
@@ -616,37 +688,87 @@ wait_time:
                         // printf("Debug ratio a:b:c:d->%d:%d:%d:%d\n", ratio_time[0], ratio_time[1],
                         //        ratio_time[2], ratio_time[3]);
                         printf("-------------------------------------------------------Dosing A,B,C,D Now!\n");
-                        expression_task = dosing_ec;
-                        SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
-                        esp_mqtt_publish_number("PUMP_PH", 0);
-                        SETFILL(PUMP_A, false,"PUMP_A_OFF");
-                        esp_mqtt_publish_number("PUMP_A", 0);
-                        SETFILL(PUMP_B, false,"PUMP_B_OFF");
-                        esp_mqtt_publish_number("PUMP_B", 0);
-                        SETFILL(PUMP_C, false,"PUMP_C_OFF");
-                        esp_mqtt_publish_number("PUMP_C", 0);
-                        SETFILL(PUMP_D, false,"PUMP_D_OFF");
-                        esp_mqtt_publish_number("PUMP_D", 0);
+                        if(_environment.fill1_state==2)
+                        {
+                                expression_task = dosing_ec;
+                                SETFILL(PUMP_A, false,"PUMP_A_OFF");
+                                esp_mqtt_publish_number("PUMP_A", 0);
+                                SETFILL(PUMP_B, false,"PUMP_B_OFF");
+                                esp_mqtt_publish_number("PUMP_B", 0);
+                                SETFILL(PUMP_C, false,"PUMP_C_OFF");
+                                esp_mqtt_publish_number("PUMP_C", 0);
+                                SETFILL(PUMP_D, false,"PUMP_D_OFF");
+                                esp_mqtt_publish_number("PUMP_D", 0);
+                                SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                esp_mqtt_publish_number("PUMP_PH", 0);
+                        }
+                        else if(_environment.fill2_state==2)
+                        {
+                                expression_task = dosing_ec;
+                                SETFILL(PUMP_A, false,"PUMP_A_OFF");
+                                esp_mqtt_publish_number("PUMP_A", 0);
+                                SETFILL(PUMP_B, false,"PUMP_B_OFF");
+                                esp_mqtt_publish_number("PUMP_B", 0);
+                                SETFILL(PUMP_C, false,"PUMP_C_OFF");
+                                esp_mqtt_publish_number("PUMP_C", 0);
+                                SETFILL(PUMP_D, false,"PUMP_D_OFF");
+                                esp_mqtt_publish_number("PUMP_D", 0);
+                                SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                esp_mqtt_publish_number("PUMP_PH", 0);
+                        }
+                        else if(_environment.fill3_state==2)
+                        {
+                                expression_task = dosing_ec;
+                                SETFILL(PUMP_A, false,"PUMP_A_OFF");
+                                esp_mqtt_publish_number("PUMP_A", 0);
+                                SETFILL(PUMP_B, false,"PUMP_B_OFF");
+                                esp_mqtt_publish_number("PUMP_B", 0);
+                                SETFILL(PUMP_C, false,"PUMP_C_OFF");
+                                esp_mqtt_publish_number("PUMP_C", 0);
+                                SETFILL(PUMP_D, false,"PUMP_D_OFF");
+                                esp_mqtt_publish_number("PUMP_D", 0);
+                                SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                esp_mqtt_publish_number("PUMP_PH", 0);
+                        }
+                        else if(_environment.fill4_state==2)
+                        {
+                                expression_task = dosing_ec;
+                                SETFILL(PUMP_A, false,"PUMP_A_OFF");
+                                esp_mqtt_publish_number("PUMP_A", 0);
+                                SETFILL(PUMP_B, false,"PUMP_B_OFF");
+                                esp_mqtt_publish_number("PUMP_B", 0);
+                                SETFILL(PUMP_C, false,"PUMP_C_OFF");
+                                esp_mqtt_publish_number("PUMP_C", 0);
+                                SETFILL(PUMP_D, false,"PUMP_D_OFF");
+                                esp_mqtt_publish_number("PUMP_D", 0);
+                                SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                esp_mqtt_publish_number("PUMP_PH", 0);
+                        }
+                        else printf("-------------------------------------------------------EC (NO AUTO)\n");
                 }
 
-                else if (ph_value > ph_setpoint && (ph_value - ph_setpoint) > below_setpoint_ph)
+                else if (ph_value > ph_setpoint && (ph_value - ph_setpoint) > below_setpoint_ph && ph_setpoint!=0.0)
                 {
                         // printf("PH setpoint->%0.1f", ph_setpoint);
                         // printf(" value->%0.1f", ph_value);
                         // printf(" diff->%0.1f>%0.1f\n", ph_value - ph_setpoint, below_setpoint_ph);
 
                         printf("-------------------------------------------------------Dosing PH Now!\n");
-                        expression_task = dosing_ph;
-                        SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
-                        esp_mqtt_publish_number("PUMP_PH", 0);
-                        SETFILL(PUMP_A, false,"PUMP_A_OFF");
-                        esp_mqtt_publish_number("PUMP_A", 0);
-                        SETFILL(PUMP_B, false,"PUMP_B_OFF");
-                        esp_mqtt_publish_number("PUMP_B", 0);
-                        SETFILL(PUMP_C, false,"PUMP_C_OFF");
-                        esp_mqtt_publish_number("PUMP_C", 0);
-                        SETFILL(PUMP_D, false,"PUMP_Dmake_OFF");
-                        esp_mqtt_publish_number("PUMP_D", 0);
+                        if (_environment.pump_ph_state == 2)
+                        {
+                                expression_task = dosing_ph;
+                                SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                esp_mqtt_publish_number("PUMP_PH", 0);
+                                SETFILL(PUMP_A, false,"PUMP_A_OFF");
+                                esp_mqtt_publish_number("PUMP_A", 0);
+                                SETFILL(PUMP_B, false,"PUMP_B_OFF");
+                                esp_mqtt_publish_number("PUMP_B", 0);
+                                SETFILL(PUMP_C, false,"PUMP_C_OFF");
+                                esp_mqtt_publish_number("PUMP_C", 0);
+                                SETFILL(PUMP_D, false,"PUMP_Dmake_OFF");
+                                esp_mqtt_publish_number("PUMP_D", 0);
+                        }
+                        else printf("-------------------------------------------------------PH (NO AUTO)\n");
                 }
 
                 break;

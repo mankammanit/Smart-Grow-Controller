@@ -234,26 +234,33 @@ static void initI2C() {
       // int current_time = time.tm_hour*MINUTES_PER_HOUR + time.tm_min;
       // int on_time = start_hour*MINUTES_PER_HOUR + start_minute;
       // int off_time = end_hour*MINUTES_PER_HOUR + end_minute;
-      int diff_time = hours_diff*MINUTES_PER_HOUR + minutes_diff;
-      int diff_time2 = hours_diff2*MINUTES_PER_HOUR + minutes_diff2;
+      time_t diff_time = hours_diff*MINUTES_PER_HOUR + minutes_diff;
+      time_t diff_time2 = hours_diff2*MINUTES_PER_HOUR + minutes_diff2;
       // printf("TIME CURRENT : %02d:%02d\n",time.tm_hour,time.tm_min);
       // printf("TIME ON : %02d:%02d\n",start_hour,start_minute);
       // printf("TIME OFF : %02d:%02d\n",end_hour,end_minute);
       // printf("The difference ON-OFF : %02d:%02d\n", hours_diff, minutes_diff);
       // printf("The difference CURRENT-OFF : %02d:%02d\n", hours_diff2, minutes_diff2);
-      // printf("current_time %d on_time %d off_time %d\non-off %d current-off %d\n"
-      // ,current_time,on_time,off_time,diff_time,diff_time2);
+      // printf("diff2time %ld - %ld\n",diff_time,diff_time2);
 
       if (diff_time2<=diff_time)
       {
         // printf("on\n");
-        return true;
+        if (diff_time2==0)
+        {
+          return false;
+        }
+        else return true;
       }
+
       else if(diff_time2>diff_time)
       {
         // printf("off\n");
         return false;
       }
+
+      else return false;
+
       return false;
     }
 

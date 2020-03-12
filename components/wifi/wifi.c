@@ -362,7 +362,9 @@ void esp_mqtt_publish_number(const char *topic, const double payload)
                         cJSON_Delete(root);
 
                         // printf("JSON: %s\n",post_data);
-                        esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0);
+                        // esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0);
+                        if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
+                        else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
 
                         removeChar(post_data, '{');
                         removeChar(post_data, '}');
@@ -399,7 +401,9 @@ void esp_mqtt_publish_string(const char *topic, const char *payload)
                         cJSON_Delete(root);
 
                         // printf("JSON: %s\n",post_data);
-                        esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0);
+                        // esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0);
+                        if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
+                        else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
 
                         removeChar(post_data, '{');
                         removeChar(post_data, '}');

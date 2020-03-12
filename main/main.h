@@ -1,7 +1,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 1.6
+#define FIRMWARE_ESP32 1.7
 
 //task ec
 TaskHandle_t task_1;
@@ -11,7 +11,6 @@ TaskHandle_t task_2;
 TaskHandle_t task_3;
 //task read_sensor_all
 TaskHandle_t task_4;
-
 
 
 //timer watchdog
@@ -111,6 +110,7 @@ char str_name[256];
 #define PUMP_TIME3              "Dashboard.d_tpump3.txt=\"%s:%s-%s-%s\"" TFTEND
 #define PUMP_TIME4              "Dashboard.d_tpump4.txt=\"%s:%s-%s-%s\"" TFTEND
 #define MODE                    "Dashboard.d_mode.txt=\"%s\"" TFTEND
+#define DASH_STAGE              "Dashboard.d_stage.txt=\"%s\"" TFTEND
 #define MODE_COLOR              "Dashboard.d_mode.pco=%d" TFTEND
 
 #define DASH_TIMERON_led1       "Dashboard.d_timeon1.txt=\"%s:%s\"" TFTEND

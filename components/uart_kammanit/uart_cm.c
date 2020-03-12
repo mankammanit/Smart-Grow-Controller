@@ -85,7 +85,7 @@ char *readec(){
         const int EC_BUF_SIZE = BUF_SIZE;
         esp_log_level_set("RX_TASK1", ESP_LOG_INFO);
         uint8_t* ec_data = (uint8_t*) malloc(EC_BUF_SIZE+1);
-        const int ec_rx = uart_read_bytes(MY_UART1, ec_data, EC_BUF_SIZE, 20 / portTICK_RATE_MS);
+        const int ec_rx = uart_read_bytes(MY_UART1, ec_data, EC_BUF_SIZE, 10 / portTICK_RATE_MS);
         if (ec_rx > 0) {
                 ec_data[ec_rx] = 0;
                 strcpy(message_ec, (char*)ec_data);

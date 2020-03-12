@@ -552,13 +552,9 @@ void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
 void enable_pca9685_1()
 {
         set_pca9685_adress(I2C_ADDRESS_1);
-        resetPCA9685();
-        setFrequencyPCA9685(1000); // 1526 Hz
 }
 //environment
 void enable_pca9685_2()
 {
         set_pca9685_adress(I2C_ADDRESS_2);
-        resetPCA9685();
-        setFrequencyPCA9685(1526); // 1526 Hz
 }
