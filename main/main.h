@@ -1,7 +1,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 1.7
+#define FIRMWARE_ESP32 1.9
 
 //task ec
 TaskHandle_t task_1;

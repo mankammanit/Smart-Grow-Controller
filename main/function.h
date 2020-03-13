@@ -521,6 +521,26 @@ static void update_dashboard()
         sprintf(str_name, PUMP_TIME1, tft_val, tft_val2,tft_val3,tft_val4);
         send_tft(str_name);
 
+        sprintf(tft_val, "%02d", working_timer.working_on_h[1]);
+        sprintf(tft_val2, "%02d", working_timer.working_on_m[1]);
+        sprintf(tft_val3, "%02d", working_timer.working_off_h[1]);
+        sprintf(tft_val4, "%02d", working_timer.working_off_m[1]);
+        sprintf(str_name, PUMP_TIME2, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
+        sprintf(tft_val, "%02d", working_timer.working_on_h[2]);
+        sprintf(tft_val2, "%02d", working_timer.working_on_m[2]);
+        sprintf(tft_val3, "%02d", working_timer.working_off_h[2]);
+        sprintf(tft_val4, "%02d", working_timer.working_off_m[2]);
+        sprintf(str_name, PUMP_TIME3, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
+        sprintf(tft_val, "%02d", working_timer.working_on_h[3]);
+        sprintf(tft_val2, "%02d", working_timer.working_on_m[3]);
+        sprintf(tft_val3, "%02d", working_timer.working_off_h[3]);
+        sprintf(tft_val4, "%02d", working_timer.working_off_m[3]);
+        sprintf(str_name, PUMP_TIME4, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
 
 
         switch (_environment.solenoide_state)
@@ -1079,4 +1099,5 @@ static void temp_init()
                 printf("Could not initialize HDC1080 1&2 internal_temp_sensor\n");
         }
 }
+
 #endif

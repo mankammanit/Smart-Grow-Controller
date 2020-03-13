@@ -30,6 +30,13 @@
 #include "OTAServer.h"
 #include "cJSON.h"
 
+#include <sys/unistd.h>
+#include <sys/stat.h>
+#include "esp_err.h"
+#include "esp_spiffs.h"
+
+
+
 /////////////////////เวลากดเริ่ม////////////////////
 struct tm start_time;
 /////////////////////////////////////////////////
@@ -2307,6 +2314,9 @@ TO_SCAN_NETWORK:
                         sprintf(str_name, CONNECT_TFT);
                         send_tft(str_name);
                         esp_task_wdt_deinit();
+                        esp_task_wdt_status(task_1);
+                        esp_task_wdt_status(task_3);
+                        esp_task_wdt_status(task_4);
                         vTaskSuspend(task_1);
                         vTaskSuspend(task_3);
                         vTaskSuspend(task_4);
@@ -2423,12 +2433,15 @@ void app_main()
         }
 
         //I2C MODE
+
         pca9685_init(); /* init i2c pca9685 */
-        setFrequencyPCA9685(1000); // 1000 Hz
         enable_pca9685_1();
+        setFrequencyPCA9685(1000);
         turnAllOff();
         enable_pca9685_2();
+        setFrequencyPCA9685(1000);
         turnAllOff();
+
         ds1307_init(); /* init i2c ds1307 */
         temp_init();                 /* init i2c hdc1080 */
 
@@ -2476,7 +2489,6 @@ void app_main()
         vTaskDelay(500 / portTICK_RATE_MS);
 
         TFT_RESTART(); /* rest tft */
-
 
 
         //test
