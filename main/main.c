@@ -38,7 +38,10 @@
 
 
 /////////////////////เวลากดเริ่ม////////////////////
+//light time
 struct tm start_time;
+//pump time
+struct tm start_time2;
 /////////////////////////////////////////////////
 
 static void task_timer_sch(void *pvParameters)
@@ -50,6 +53,7 @@ static void task_timer_sch(void *pvParameters)
         struct tm time;
         readValue(&time);
         read_time(&start_time);
+        read_time(&start_time2);
 
         while (1)
         {
@@ -59,8 +63,8 @@ static void task_timer_sch(void *pvParameters)
 
                 ///clock
                 Timestamp     = difftime(mktime(&time)+time_since_boot, mktime(&start_time));
+                Pumpstamp     = difftime(mktime(&time)+time_since_boot, mktime(&start_time2));
                 current_stamp = mktime(&time)+time_since_boot;
-                Day_Index     = Timestamp / 86400 + status_pg.start_day;
                 feed_stamp    = mktime(&time)+time_since_boot;
 
                 // printf("current_stamp %s", asctime(localtime(&current_stamp)));
@@ -1840,6 +1844,10 @@ static void RECV_CALL_TFT(void *pvParameter)
                         working_timer.status_timer[3] = dtmp[21];
 
                         save_working(working_timer);
+
+                        readValue(&start_time2);
+                        save_time(&start_time2);
+
                         load_day = true;
 
                         break;
@@ -2489,30 +2497,5 @@ void app_main()
         vTaskDelay(500 / portTICK_RATE_MS);
 
         TFT_RESTART(); /* rest tft */
-
-
-        //test
-        //   enable_pca9685_1();
-        //   while(1)
-        //   {
-        //   for(int i = 0; i<101; i++ )
-        //   {
-        //           // enable_pca9685_1();
-        //           printf("pwmp[%d]\n",i);
-        //           setPWM(ZONE1_LED1,map(i), 0);
-        //           printf("\n\n");
-        //           vTaskDelay(10 / portTICK_RATE_MS);
-        //   }
-        //     vTaskDelay(3000 / portTICK_RATE_MS);
-        //   for(int i = 100; i>0; i-- )
-        //   {
-        //           // enable_pca9685_1();
-        //           printf("pwmp[%d]\n",i);
-        //           setPWM(ZONE1_LED1,map(i), 0);
-        //           printf("\n\n");
-        //           vTaskDelay(10 / portTICK_RATE_MS);
-        //   }
-        //   vTaskDelay(3000 / portTICK_RATE_MS);
-        // }
 
 }

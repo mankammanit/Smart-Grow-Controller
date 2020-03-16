@@ -20,7 +20,6 @@
 uint8_t call_water_lv();
 // void SETFILL(uint8_t pin, bool val);
 void SETFILL(uint8_t pin, bool val,char* info);
-uint8_t call_status_pump();
 extern float ec_value;
 extern float ph_value;
 

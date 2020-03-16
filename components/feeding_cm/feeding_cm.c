@@ -19,8 +19,6 @@ uint8_t contain_mode = 0; //day=1,night=2,unplant=0
 bool loop_dosing = false;
 float ph_check_err;
 
-uint16_t Day_Index = 0;
-bool load_day = false;
 
 
 //use fill
@@ -64,106 +62,6 @@ uint8_t call_water_lv()
         return 0;
 }
 
-uint8_t call_status_pump()
-{
-        if(_environment.pump_water_state==2)
-        {
-                if (load_day)
-                {
-                        // printf("save_working\n");
-                        working_timer.working_nextday = Day_Index + working_timer.working_day;
-                        save_working(working_timer);
-                        load_day = false;
-                        // printf("Day_Index %d , working_nextday %d\n", Day_Index,working_timer.working_nextday);
-                }
-
-                if (working_timer.working_day == 0 )
-                {
-                        printf("-------------------------------------------------------Every day\n");
-                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
-                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
-                        {
-                                if(working_timer.status_timer[0] == 1)
-                                {
-                                        return 1;
-
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
-                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
-                        {
-                                if(working_timer.status_timer[1] == 1)
-                                {
-                                        return 2;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
-                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
-                        {
-                                if(working_timer.status_timer[2] == 1)
-                                {
-                                        return 3;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
-                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
-                        {
-                                if(working_timer.status_timer[3] == 1)
-                                {
-                                        return 4;
-                                }
-                        }
-                        else return 0;
-                }
-                else if (Day_Index == working_timer.working_nextday)
-                {
-                        printf("-------------------------------------------------------Some day\n");
-                        working_timer.working_nextday = Day_Index + working_timer.working_day;
-                        working_timer.working_lastday = Day_Index;
-                        save_working(working_timer);
-
-                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
-                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
-                        {
-                                if(working_timer.status_timer[0] == 1)
-                                {
-                                        return 1;
-
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
-                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
-                        {
-                                if(working_timer.status_timer[1] == 1)
-                                {
-                                        return 2;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
-                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
-                        {
-                                if(working_timer.status_timer[2] == 1)
-                                {
-                                        return 3;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
-                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
-                        {
-                                if(working_timer.status_timer[3] == 1)
-                                {
-                                        return 4;
-                                }
-                        }
-                        else return 0;
-
-                }
-        }
-        else if(_environment.pump_water_state==1) return 5;
-        else return 6;
-
-        return 0;
-}
 
 
 
