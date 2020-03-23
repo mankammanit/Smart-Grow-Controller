@@ -1,7 +1,12 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 2.0
+#define FIRMWARE_ESP32 2.5
+
+//ver 0 บอร์ดรุ่นแรกงานคุณมีีน
+//ver 1 บอร์ดรุ่นสองงานคุณอ๊อฟหินบุรีรัมย์[ใช้เป็นมาตรฐาน]
+//ver 2 Special LAB C
+#define REVISION 1
 
 //task ec
 TaskHandle_t task_1;
@@ -11,7 +16,6 @@ TaskHandle_t task_2;
 TaskHandle_t task_3;
 //task read_sensor_all
 TaskHandle_t task_4;
-
 
 //timer watchdog
 #define WATCHDOG_TIMEOUT_S 90
@@ -55,7 +59,13 @@ TaskHandle_t task_4;
 #define PUMP_D      4
 #define PUMP_PH     5
 #define DRAIN       6
+#if REVISION==1
 #define ON_OFF_P1   7
+#elif REVISION==2
+#define ON_OFF_P1   7
+#else
+#define ON_OFF_P1   6
+#endif
 #define ON_OFF_P2   8
 #define AIR_PUMP    9
 #define FAN_PWM     10
@@ -354,6 +364,8 @@ char str_name[256];
 #define DRAW_SPECTRUM           "line %d,%d,%d,%d,%d" TFTEND
 //picq <destx>,<desty>,<w>,<h>,<picid>
 #define CLEAR_SPECTRUM          "ref 0" TFTEND
+// xstr <x>,<y>,<w>,<h>,<font>,<pco>,<bco>,<xcen>,<ycen>,<sta>,<text>
+#define PLOT_TXT                "xstr %d,%d,%d,%d,3,21359,0,0,1,3,\"%s\"" TFTEND
 
 enum tft_cmd
 {

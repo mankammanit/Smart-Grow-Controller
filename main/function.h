@@ -1,6 +1,13 @@
 #ifndef __FUNCTION_H__
 #define __FUNCTION_H__
 
+/////////////////////เวลากดเริ่ม////////////////////
+//light time
+struct tm start_time;
+//pump time
+struct tm start_time2;
+/////////////////////////////////////////////////
+
 ////////////////// tft /////////////////////////
 char ec_tft[5], ph_tft[5], water_tft[5];
 char tft_val[16], tft_val2[5], tft_val3[5],
@@ -17,8 +24,7 @@ int64_t time_since_boot;
 bool first_start[4][4];
 time_t Timestamp,current_stamp,Pumpstamp;
 bool check_fill_water = true;
-uint16_t Day_Index = 0;
-bool load_day = false;
+uint16_t Day_Index;
 ///////////////////////////////////////////////
 
 ////////////////// sensor //////////////////////
@@ -30,6 +36,13 @@ float read_humidity[2];
 
 static void update_mqtt_cm()
 {
+        sprintf(tft_val,"%02d-%02d-%04d %02d:%02d",start_time.tm_mday,start_time.tm_mon+1,
+                start_time.tm_year+1900,start_time.tm_hour,start_time.tm_min);
+        esp_mqtt_publish_string("START_LIGHT",tft_val);
+
+        sprintf(tft_val,"%02d-%02d-%04d %02d:%02d",start_time2.tm_mday,start_time2.tm_mon+1,
+                start_time2.tm_year+1900,start_time2.tm_hour,start_time2.tm_min);
+        esp_mqtt_publish_string("START_PUMP",tft_val);
 
         sprintf(tft_val, "%.1f", ec_setpoint);
         esp_mqtt_publish_string("EC_SETPOINT",tft_val);
@@ -38,6 +51,15 @@ static void update_mqtt_cm()
 
         esp_mqtt_publish_number("PG_Working", Timestamp_day);
         esp_mqtt_publish_string("PG_STAGE",mqttpgstage);
+
+        esp_mqtt_publish_number("Pump_working",Day_Index);
+        esp_mqtt_publish_number("Pump_worknext",working_timer.working_nextday);
+        esp_mqtt_publish_number("Pump_worklast",working_timer.working_lastday);
+
+        esp_mqtt_publish_string(mqttpgsch[0],mqttpgzone[0]);
+        esp_mqtt_publish_string(mqttpgsch[1],mqttpgzone[1]);
+        esp_mqtt_publish_string(mqttpgsch[2],mqttpgzone[2]);
+        esp_mqtt_publish_string(mqttpgsch[3],mqttpgzone[3]);
 
 }
 
@@ -236,7 +258,7 @@ static void read_sensor_all()
 
 static uint8_t list_my_stage()
 {
-        Timestamp_day = Timestamp / 86400 + status_pg.start_day;
+        Timestamp_day = (Timestamp / 86400) + status_pg.start_day;
         planted_state_1 = (time_pg.dayoff[0] - time_pg.dayon[0])+1;
         planted_state_2 = (time_pg.dayoff[1] - time_pg.dayon[1])+planted_state_1+1;
         //ส่งค่าวันที่ปลูก
@@ -278,21 +300,24 @@ static void input_light_stage(uint8_t stage)
                                  time_pg.pg_min_on[stage][zone], time_pg.pg_min_off[stage][zone]))
                 {
                         // printf("-------------------------------------------------------LED_ZONE%d_ON\n",zone+1);
-                        sprintf(str_name, "LED_ZONE%d_ON",zone+1);
-                        sprintf(tft_val, "PG_Schedule%d",zone+1);
-                        esp_mqtt_publish_string(tft_val,str_name);
 
                         if (first_start[stage][zone] == true)
                         {
 
                                 if(zone==0)
                                 {
+                                        #if REVISION==2
+                                        SETFILL(PWM12CH2,true,"PWM12CH2_ON");
+                                        #endif
                                         printf("-------------------------------------------------------SET LED_ZONE%d_ON\n",zone+1);
                                         set_bright(ZONE1_LED1, ZONE1_LED2, ZONE1_LED3, ZONE1_LED4,
                                                    time_pg.bright_1[stage][zone],
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
                                                    time_pg.bright_4[stage][zone]);
+
+                                        mqttpgzone[zone]="LED_ZONE1_ON";
+                                        mqttpgsch[zone]="PG_Schedule1";
                                 }
                                 else if(zone==1)
                                 {
@@ -302,6 +327,9 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
                                                    time_pg.bright_4[stage][zone]);
+
+                                        mqttpgzone[zone]="LED_ZONE2_ON";
+                                        mqttpgsch[zone]="PG_Schedule2";
                                 }
                                 else if(zone==2)
                                 {
@@ -311,6 +339,9 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
                                                    time_pg.bright_4[stage][zone]);
+
+                                        mqttpgzone[zone]="LED_ZONE3_ON";
+                                        mqttpgsch[zone]="PG_Schedule3";
                                 }
                                 else if(zone==3)
                                 {
@@ -320,6 +351,9 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
                                                    time_pg.bright_4[stage][zone]);
+
+                                        mqttpgzone[zone]="LED_ZONE4_ON";
+                                        mqttpgsch[zone]="PG_Schedule4";
                                 }
                                 first_start[stage][zone] = false;
                         }
@@ -327,9 +361,6 @@ static void input_light_stage(uint8_t stage)
                 else
                 {
                         // printf("-------------------------------------------------------LED_ZONE%d_OFF\n",zone+1);
-                        sprintf(str_name, "LED_ZONE%d_OFF",zone+1);
-                        sprintf(tft_val, "PG_Schedule%d",zone+1);
-                        esp_mqtt_publish_string(tft_val,str_name);
 
                         if(zone==0)
                         {
@@ -339,6 +370,13 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0);
+
+                                mqttpgzone[zone]="LED_ZONE1_OFF";
+                                mqttpgsch[zone]="PG_Schedule1";
+
+                                #if REVISION==2
+                                SETFILL(PWM12CH2,false,"PWM12CH2_OFF");
+                                #endif
 
                         }
                         else if(zone==1)
@@ -350,6 +388,8 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0);
 
+                                mqttpgzone[zone]="LED_ZONE2_OFF";
+                                mqttpgsch[zone]="PG_Schedule2";
                         }
                         else if(zone==2)
                         {
@@ -360,6 +400,9 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0);
 
+                                mqttpgzone[zone]="LED_ZONE3_OFF";
+                                mqttpgsch[zone]="PG_Schedule3";
+
                         }
                         else if(zone==3)
                         {
@@ -369,6 +412,9 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0);
+
+                                mqttpgzone[zone]="LED_ZONE4_OFF";
+                                mqttpgsch[zone]="PG_Schedule4";
 
                         }
                         first_start[stage][zone] = true;
@@ -423,8 +469,8 @@ static void call_time_light()
 
 static uint8_t call_status_pump()
 {
-        Day_Index = Pumpstamp/86400;
-        // printf("Day_Index %d , working_day %d \n", Day_Index,working_timer.working_day);
+        Day_Index = (Pumpstamp / 86400) + 1;
+        printf("Day_Index %d ,working_day %d ,working_nextday %d\n", Day_Index,working_timer.working_day,working_timer.working_nextday);
 
         if(_environment.pump_water_state==2)
         {
@@ -469,18 +515,12 @@ static uint8_t call_status_pump()
                 }
                 else if (working_timer.working_day !=0)
                 {
-                        // printf("-------------------------------------------------------Some day\n");
+                        printf("-------------------------------------------------------Some day\n");
 
-                        if(Day_Index==0)
+                        if(Day_Index==1)
 
                         {
-                                working_timer.working_nextday = Day_Index + working_timer.working_day+1;
-                                working_timer.working_lastday = Day_Index;
-                                save_working(working_timer);
-                                // printf("working_nextday %d,working_lastday %d\n",working_timer.working_nextday,
-                                //        working_timer.working_lastday);
-                                printf("-------------------------------------------------------Some day %d-->%d\n",working_timer.working_lastday,
-                                       working_timer.working_nextday);
+                                printf("-------------------------------------------------------Some day 1st 1Days\n");
 
                                 if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
                                                  working_timer.working_on_m[0], working_timer.working_off_m[0]))
@@ -518,16 +558,13 @@ static uint8_t call_status_pump()
 
                                 else return 0;
                         }
-                        if(Day_Index == working_timer.working_nextday)
+                        else if(Day_Index == working_timer.working_nextday)
                         {
 
-                                working_timer.working_nextday = Day_Index + working_timer.working_day+1;
                                 working_timer.working_lastday = Day_Index;
                                 save_working(working_timer);
-                                // printf("working_nextday %d,working_lastday %d\n",working_timer.working_nextday,
-                                //        working_timer.working_lastday);
-                                printf("-------------------------------------------------------Some day %d-->%d\n",working_timer.working_lastday,
-                                       working_timer.working_nextday);
+
+                                printf("-------------------------------------------------------Some day work is %d\n",working_timer.working_lastday);
 
                                 if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
                                                  working_timer.working_on_m[0], working_timer.working_off_m[0]))
@@ -564,6 +601,14 @@ static uint8_t call_status_pump()
                                 }
 
                                 else return 0;
+                        }
+                        else if(Day_Index != working_timer.working_nextday)
+                        {
+                                working_timer.working_nextday = Day_Index + working_timer.working_day;
+                                save_working(working_timer);
+
+                                printf("-------------------------------------------------------Next work day %d\n",
+                                       working_timer.working_nextday);
                         }
 
                 }
@@ -951,6 +996,7 @@ static void update_dashboard()
                                                  time_pg.pg_min_on[0][3], time_pg.pg_min_off[0][3]));
                 sprintf(str_name, DASH_DUARATION_led4, tft_val);
                 send_tft(str_name);
+
                 break;
 
         case 2:

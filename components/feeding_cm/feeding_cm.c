@@ -19,15 +19,13 @@ uint8_t contain_mode = 0; //day=1,night=2,unplant=0
 bool loop_dosing = false;
 float ph_check_err;
 
-
-
 //use fill
 void SETFILL(uint8_t pin, bool val,char* info)
 {
         // printf("-------------------------------------------------------WORK'S %s\n",info);
-        triger_adr[0] = false;
-        if(triger_adr[1])
-        {
+        // triger_adr[0] = false;
+        // if(triger_adr[1])
+        // {
                 printf("-------------------------------------------------------WORK'S %s\n",info);
                 enable_pca9685_2();
                 if (val) {
@@ -36,8 +34,8 @@ void SETFILL(uint8_t pin, bool val,char* info)
                 else if (!val) {
                         setPWM(pin, 0, 4096);
                 }
-        }
-        triger_adr[0] = true;
+        // }
+        // triger_adr[0] = true;
 }
 
 

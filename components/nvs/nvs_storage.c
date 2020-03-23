@@ -680,6 +680,11 @@ void load_default_nvs()
         working_timer.status_timer[2] = 0;
         working_timer.status_timer[3] = 0;
 
+
+        working_timer.working_day = 0;
+        working_timer.working_nextday = 0;
+        working_timer.working_lastday = 0;
+
         save_working(working_timer);
 
         status_pg.switch_mode = 0;

@@ -19,9 +19,21 @@
 
 // receive buffer
 char rcv_buffer[200];
+
+#if REVISION==1
 #define UPDATE_JSON_BIN   "http://183.88.218.59:5090/fw_grow_controller/contain_ver.json"
 #define UPDATE_JSON_TFT   "http://183.88.218.59:5090/fw_grow_controller/tft_ver.json"
 #define DOWNLOAD_BIN      "http://183.88.218.59:5090/fw_grow_controller/fw_contain.bin"
+#elif REVISION==2
+#define UPDATE_JSON_BIN   "http://183.88.218.59:5090/fw_grow_controller_lab_b/contain_ver.json"
+#define UPDATE_JSON_TFT   "http://183.88.218.59:5090/fw_grow_controller_lab_b/tft_ver.json"
+#define DOWNLOAD_BIN      "http://183.88.218.59:5090/fw_grow_controller_lab_b/fw_contain.bin"
+#else
+#define UPDATE_JSON_BIN   "http://183.88.218.59:5090/fw_grow_controller_ver1/contain_ver.json"
+#define UPDATE_JSON_TFT   "http://183.88.218.59:5090/fw_grow_controller_ver1/tft_ver.json"
+#define DOWNLOAD_BIN      "http://183.88.218.59:5090/fw_grow_controller_ver1/fw_contain.bin"
+#endif
+
 
 //map file to percent
 //return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min

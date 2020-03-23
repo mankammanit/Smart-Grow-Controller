@@ -37,13 +37,6 @@
 
 
 
-/////////////////////เวลากดเริ่ม////////////////////
-//light time
-struct tm start_time;
-//pump time
-struct tm start_time2;
-/////////////////////////////////////////////////
-
 static void task_timer_sch(void *pvParameters)
 {
         //Subscribe this task to TWDT, then check if it is subscribed
@@ -107,7 +100,7 @@ static void read_sensor_task(void *pvParameters)
                 {
                         call_rssi();
                 }
-                vTaskDelay(5000 / portTICK_PERIOD_MS);
+                vTaskDelay(10000 / portTICK_PERIOD_MS);
         }
 }
 
@@ -270,6 +263,10 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 working_timer.status_timer[2] = 0;
                                 working_timer.status_timer[3] = 0;
 
+                                working_timer.working_day = 0;
+                                working_timer.working_nextday = 0;
+                                working_timer.working_lastday = 0;
+
                                 save_working(working_timer);
                         }
 
@@ -423,11 +420,9 @@ static void RECV_CALL_TFT(void *pvParameter)
                         start_dosing_ec = true;
                         start_dosing_ph = true;
 
-                        load_day = true;
-
                         //triger switch adr i2c
-                        triger_adr[0] = true;
-                        triger_adr[1] = true;
+                        // triger_adr[0] = true;
+                        // triger_adr[1] = true;
 
                         break;
                 case PAGE_HOME:
@@ -438,6 +433,18 @@ static void RECV_CALL_TFT(void *pvParameter)
                         printf("case DASH_BOARD\n");
                         call_time(1);
                         update_dashboard();
+                        sprintf(tft_val,"%02d/%02d %02d:%02d",start_time2.tm_mday,start_time2.tm_mon+1,
+                                start_time2.tm_hour,start_time2.tm_min);
+                        sprintf(str_name, PLOT_TXT,653,316,85,20,tft_val);
+                        send_tft(str_name);
+
+                        ////////////////////////////////////////////
+                        for(uint8_t i = 0; i < 4; i++)
+                        {
+                                for(uint8_t j = 0; j < 4; j++)
+                                        first_start[i][j] = true;
+                        }
+                        ///////////////////////////////////////////
                         break;
 
                 case PAGE_RATIO:
@@ -1588,8 +1595,6 @@ static void RECV_CALL_TFT(void *pvParameter)
                                         first_start[i][j] = true;
                         }
 
-                        load_day = true;
-
                         break;
 
                 case STATUS_PROGRAM:
@@ -1843,12 +1848,14 @@ static void RECV_CALL_TFT(void *pvParameter)
                         working_timer.status_timer[2] = dtmp[20];
                         working_timer.status_timer[3] = dtmp[21];
 
+                        working_timer.working_nextday = 0;
+                        working_timer.working_lastday = 0;
+                        save_working(working_timer);
+
                         save_working(working_timer);
 
                         readValue(&start_time2);
                         save_time(&start_time2);
-
-                        load_day = true;
 
                         break;
 
@@ -2094,7 +2101,6 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 case 2:
                                         printf("PUMP_WATER to mode AUTO\n");
                                         SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
-                                        load_day = true;
                                         break;
                                 }
                                 _environment.pump_water_state = dtmp[2];
@@ -2497,5 +2503,4 @@ void app_main()
         vTaskDelay(500 / portTICK_RATE_MS);
 
         TFT_RESTART(); /* rest tft */
-
 }
