@@ -428,6 +428,39 @@ void esp_mqtt_publish_string(const char *topic, const char *payload)
         }
 }
 
+void publish_array_object(char *post_data)
+{
+  if(network_is_alive() == true)
+  {
+          if(mqtt_is_alive()==true)
+          {
+
+                  if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
+                  else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
+
+                  removeChar(post_data, '{');
+                  removeChar(post_data, '}');
+                  removeChar(post_data, '"');
+
+                  sprintf(str_name,DEBUG_TFT,post_data);
+                  send_tft(str_name);
+                  free(post_data);
+          }
+          else
+          {
+                  ESP_LOGI("MQTT_CM", "MQTT network connection missing");
+                  sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
+                  send_tft(str_name);
+          }
+  }
+  else
+  {
+          ESP_LOGI("INFO_WIFI", "Wi-Fi network connection missing");
+          sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
+          send_tft(str_name);
+  }
+}
+
 
 static esp_err_t mqtt_event_handler_cm(esp_mqtt_event_handle_t event)
 {

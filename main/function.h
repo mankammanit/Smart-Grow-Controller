@@ -1,6 +1,10 @@
 #ifndef __FUNCTION_H__
 #define __FUNCTION_H__
 
+#include <string.h>
+#include "cJSON.h"
+#include "wifi.h"
+
 /////////////////////เวลากดเริ่ม////////////////////
 //light time
 struct tm start_time;
@@ -32,34 +36,52 @@ static hdc1080_sensor_t *internal_temp_sensor;
 static hdc1080_sensor_t *external_temp_sensor;
 float read_temperature[2];
 float read_humidity[2];
+float water_temp;
 ////////////////////////////////////////////////
 
 static void update_mqtt_cm()
 {
+
+        cJSON *root = cJSON_CreateObject();
+
+        cJSON_AddStringToObject(root, mqttpgsch[0],mqttpgzone[0]);
+        cJSON_AddStringToObject(root, mqttpgsch[1],mqttpgzone[1]);
+        cJSON_AddStringToObject(root, mqttpgsch[2],mqttpgzone[2]);
+        cJSON_AddStringToObject(root, mqttpgsch[3],mqttpgzone[3]);
+
+        cJSON_AddNumberToObject(root,"Pump_working",Day_Index);
+        cJSON_AddNumberToObject(root,"Pump_worknext",working_timer.working_nextday);
+        cJSON_AddNumberToObject(root,"Pump_worklast",working_timer.working_lastday);
+
+        cJSON_AddNumberToObject(root,"PG_Working", Timestamp_day);
+        cJSON_AddStringToObject(root,"PG_STAGE",mqttpgstage);
+
+        cJSON_AddStringToObject(root,"PH",ph_tft);
+        cJSON_AddStringToObject(root,"EC",ec_tft);
+
+        if(water_temp > 0 && water_temp < 40.00)
+        {
+                cJSON_AddStringToObject(root,"WATER_TEMP",water_tft);
+        }
+
+        sprintf(tft_val, "%.1f", ec_setpoint);
+        cJSON_AddStringToObject(root,"EC_SETPOINT",tft_val);
+        sprintf(tft_val, "%.1f", ph_setpoint);
+        cJSON_AddStringToObject(root,"PH_SETPOINT",tft_val);
+
         sprintf(tft_val,"%02d-%02d-%04d %02d:%02d",start_time.tm_mday,start_time.tm_mon+1,
                 start_time.tm_year+1900,start_time.tm_hour,start_time.tm_min);
-        esp_mqtt_publish_string("START_LIGHT",tft_val);
+        cJSON_AddStringToObject(root,"START_LIGHT",tft_val);
 
         sprintf(tft_val,"%02d-%02d-%04d %02d:%02d",start_time2.tm_mday,start_time2.tm_mon+1,
                 start_time2.tm_year+1900,start_time2.tm_hour,start_time2.tm_min);
-        esp_mqtt_publish_string("START_PUMP",tft_val);
+        cJSON_AddStringToObject(root,"START_PUMP",tft_val);
 
-        sprintf(tft_val, "%.1f", ec_setpoint);
-        esp_mqtt_publish_string("EC_SETPOINT",tft_val);
-        sprintf(tft_val, "%.1f", ph_setpoint);
-        esp_mqtt_publish_string("PH_SETPOINT",tft_val);
+        char *post_data = cJSON_PrintUnformatted(root);
 
-        esp_mqtt_publish_number("PG_Working", Timestamp_day);
-        esp_mqtt_publish_string("PG_STAGE",mqttpgstage);
+        cJSON_Delete(root);
 
-        esp_mqtt_publish_number("Pump_working",Day_Index);
-        esp_mqtt_publish_number("Pump_worknext",working_timer.working_nextday);
-        esp_mqtt_publish_number("Pump_worklast",working_timer.working_lastday);
-
-        esp_mqtt_publish_string(mqttpgsch[0],mqttpgzone[0]);
-        esp_mqtt_publish_string(mqttpgsch[1],mqttpgzone[1]);
-        esp_mqtt_publish_string(mqttpgsch[2],mqttpgzone[2]);
-        esp_mqtt_publish_string(mqttpgsch[3],mqttpgzone[3]);
+        publish_array_object(post_data);
 
 }
 
@@ -216,35 +238,30 @@ static void call_time(uint8_t page)
 
 static void read_sensor_all()
 {
-        readAnalogpH();
         //ph
+        readAnalogpH();
         sprintf(ph_tft, "%.1f", ph_value);
         sprintf(str_name,PH_SEND,ph_tft);
         send_tft(str_name);
-        esp_mqtt_publish_string("PH",ph_tft);
 
-        ec_value = ec_read(ec_val_plot);
         //ec
-        // printf("EC analog is %d\n",ec_val_plot);
+        ec_value = ec_read(ec_val_plot);
         sprintf(ec_tft, "%.2f",ec_value);
         sprintf(str_name,EC_SEND,ec_tft);
         send_tft(str_name);
-        esp_mqtt_publish_string("EC",ec_tft);
 
         //water temp
-        float water_temp = ds18b20_get_temp();
+        water_temp = ds18b20_get_temp();
         if(water_temp > 0 && water_temp < 40.00)
         {
-                // // send tft
-                sprintf(water_tft, "%.1f", water_temp);
+                sprintf(water_tft, "%.2f",ec_value);
                 sprintf(str_name,WATER_TEMP_SEND,water_tft);
                 send_tft(str_name);
-                esp_mqtt_publish_string("WATER_TEMP",water_tft);
         }
 
+        //temp&humid
         hdc1080_read(external_temp_sensor, &read_temperature[0], &read_humidity[0]);
         hdc1080_read(internal_temp_sensor, &read_temperature[1], &read_humidity[1]);
-
 
         printf("\n################## READ SENSOR ###################\n");
         printf("PH Val : %.1f\n",ph_value);
@@ -314,7 +331,8 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_1[stage][zone],
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
-                                                   time_pg.bright_4[stage][zone]);
+                                                   time_pg.bright_4[stage][zone],
+                                                   "AUTO_ZONE1_ON");
 
                                         mqttpgzone[zone]="LED_ZONE1_ON";
                                         mqttpgsch[zone]="PG_Schedule1";
@@ -326,7 +344,8 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_1[stage][zone],
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
-                                                   time_pg.bright_4[stage][zone]);
+                                                   time_pg.bright_4[stage][zone],
+                                                   "AUTO_ZONE2_ON");
 
                                         mqttpgzone[zone]="LED_ZONE2_ON";
                                         mqttpgsch[zone]="PG_Schedule2";
@@ -338,7 +357,8 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_1[stage][zone],
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
-                                                   time_pg.bright_4[stage][zone]);
+                                                   time_pg.bright_4[stage][zone],
+                                                   "AUTO_ZONE3_ON");
 
                                         mqttpgzone[zone]="LED_ZONE3_ON";
                                         mqttpgsch[zone]="PG_Schedule3";
@@ -350,7 +370,8 @@ static void input_light_stage(uint8_t stage)
                                                    time_pg.bright_1[stage][zone],
                                                    time_pg.bright_2[stage][zone],
                                                    time_pg.bright_3[stage][zone],
-                                                   time_pg.bright_4[stage][zone]);
+                                                   time_pg.bright_4[stage][zone],
+                                                   "AUTO_ZONE4_ON");
 
                                         mqttpgzone[zone]="LED_ZONE4_ON";
                                         mqttpgsch[zone]="PG_Schedule4";
@@ -369,7 +390,8 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0,
-                                           0);
+                                           0,
+                                           "AUTO_ZONE1_OFF");
 
                                 mqttpgzone[zone]="LED_ZONE1_OFF";
                                 mqttpgsch[zone]="PG_Schedule1";
@@ -386,7 +408,8 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0,
-                                           0);
+                                           0,
+                                           "AUTO_ZONE2_OFF");
 
                                 mqttpgzone[zone]="LED_ZONE2_OFF";
                                 mqttpgsch[zone]="PG_Schedule2";
@@ -398,7 +421,8 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0,
-                                           0);
+                                           0,
+                                           "AUTO_ZONE3_OFF");
 
                                 mqttpgzone[zone]="LED_ZONE3_OFF";
                                 mqttpgsch[zone]="PG_Schedule3";
@@ -411,7 +435,8 @@ static void input_light_stage(uint8_t stage)
                                            0,
                                            0,
                                            0,
-                                           0);
+                                           0,
+                                           "AUTO_ZONE4_OFF");
 
                                 mqttpgzone[zone]="LED_ZONE4_OFF";
                                 mqttpgsch[zone]="PG_Schedule4";
@@ -419,6 +444,7 @@ static void input_light_stage(uint8_t stage)
                         }
                         first_start[stage][zone] = true;
                 }
+                vTaskDelay(50 / portTICK_PERIOD_MS);
         }
 }
 

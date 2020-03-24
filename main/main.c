@@ -284,25 +284,29 @@ static void RECV_CALL_TFT(void *pvParameter)
                                    ratio_led.bright_1[0],
                                    ratio_led.bright_2[0],
                                    ratio_led.bright_3[0],
-                                   ratio_led.bright_4[0]);
+                                   ratio_led.bright_4[0],
+                                   "LOAD_MANUAL_ZONE1");
 
                         set_bright(ZONE2_LED1, ZONE2_LED2, ZONE2_LED3, ZONE2_LED4,
                                    ratio_led.bright_1[1],
                                    ratio_led.bright_2[1],
                                    ratio_led.bright_3[1],
-                                   ratio_led.bright_4[1]);
+                                   ratio_led.bright_4[1],
+                                   "LOAD_MANUAL_ZONE2");
 
                         set_bright(ZONE3_LED1, ZONE3_LED2, ZONE3_LED3, ZONE3_LED4,
                                    ratio_led.bright_1[2],
                                    ratio_led.bright_2[2],
                                    ratio_led.bright_3[2],
-                                   ratio_led.bright_4[2]);
+                                   ratio_led.bright_4[2],
+                                   "LOAD_MANUAL_ZONE3");
 
                         set_bright(ZONE4_LED1, ZONE4_LED2, ZONE4_LED3, ZONE4_LED4,
                                    ratio_led.bright_1[3],
                                    ratio_led.bright_2[3],
                                    ratio_led.bright_3[3],
-                                   ratio_led.bright_4[3]);
+                                   ratio_led.bright_4[3],
+                                   "LOAD_MANUAL_ZONE4");
 
                         switch (_environment.fill1_state) {
                         case 0:
@@ -528,7 +532,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                            dtmp[2],
                                            dtmp[3],
                                            dtmp[4],
-                                           dtmp[5]);
+                                           dtmp[5],
+                                           "SET_MANUAL_ZONE1");
 
                                 break;
 
@@ -543,7 +548,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                            dtmp[2],
                                            dtmp[3],
                                            dtmp[4],
-                                           dtmp[5]);
+                                           dtmp[5],
+                                           "SET_MANUAL_ZONE2");
                                 break;
 
                         case 3:
@@ -557,7 +563,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                            dtmp[2],
                                            dtmp[3],
                                            dtmp[4],
-                                           dtmp[5]);
+                                           dtmp[5],
+                                           "SET_MANUAL_ZONE3");
                                 break;
 
                         case 4:
@@ -571,7 +578,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                            dtmp[2],
                                            dtmp[3],
                                            dtmp[4],
-                                           dtmp[5]);
+                                           dtmp[5],
+                                           "SET_MANUAL_ZONE4");
                                 break;
                         }
                         save_ratio(ratio_led);
@@ -1173,22 +1181,26 @@ static void RECV_CALL_TFT(void *pvParameter)
                         case 1:
                                 printf("case SET_RATIO_ZONE1\n");
                                 set_bright(ZONE1_LED1, ZONE1_LED2, ZONE1_LED3, ZONE1_LED4,
-                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6]);
+                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6],
+                                           "SET_AUTO_ZONE1");
                                 break;
                         case 2:
                                 printf("case SET_RATIO_ZONE2\n");
                                 set_bright(ZONE2_LED1, ZONE2_LED2, ZONE2_LED3, ZONE2_LED4,
-                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6]);
+                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6],
+                                           "SET_AUTO_ZONE2");
                                 break;
                         case 3:
                                 printf("case SET_RATIO_ZONE3\n");
                                 set_bright(ZONE3_LED1, ZONE3_LED2, ZONE3_LED3, ZONE3_LED4,
-                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6]);
+                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6],
+                                           "SET_AUTO_ZONE3");
                                 break;
                         case 4:
                                 printf("case SET_RATIO_ZONE4\n");
                                 set_bright(ZONE4_LED1, ZONE4_LED2, ZONE4_LED3, ZONE4_LED4,
-                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6]);
+                                           dtmp[3], dtmp[4], dtmp[5], dtmp[6],
+                                           "SET_AUTO_ZONE4");
                                 break;
                         }
 
@@ -1618,25 +1630,29 @@ static void RECV_CALL_TFT(void *pvParameter)
                                            ratio_led.bright_1[0],
                                            ratio_led.bright_2[0],
                                            ratio_led.bright_3[0],
-                                           ratio_led.bright_4[0]);
+                                           ratio_led.bright_4[0],
+                                           "LOAD_MANUAL_ZONE1");
 
                                 set_bright(ZONE2_LED1, ZONE2_LED2, ZONE2_LED3, ZONE2_LED4,
                                            ratio_led.bright_1[1],
                                            ratio_led.bright_2[1],
                                            ratio_led.bright_3[1],
-                                           ratio_led.bright_4[1]);
+                                           ratio_led.bright_4[1],
+                                           "LOAD_MANUAL_ZONE2");
 
                                 set_bright(ZONE3_LED1, ZONE3_LED2, ZONE3_LED3, ZONE3_LED4,
                                            ratio_led.bright_1[2],
                                            ratio_led.bright_2[2],
                                            ratio_led.bright_3[2],
-                                           ratio_led.bright_4[2]);
+                                           ratio_led.bright_4[2],
+                                           "LOAD_MANUAL_ZONE3");
 
                                 set_bright(ZONE4_LED1, ZONE4_LED2, ZONE4_LED3, ZONE4_LED4,
                                            ratio_led.bright_1[3],
                                            ratio_led.bright_2[3],
                                            ratio_led.bright_3[3],
-                                           ratio_led.bright_4[3]);
+                                           ratio_led.bright_4[3],
+                                           "LOAD_MANUAL_ZONE4");
 
                                 break;
 

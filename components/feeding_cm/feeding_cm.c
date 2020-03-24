@@ -22,20 +22,18 @@ float ph_check_err;
 //use fill
 void SETFILL(uint8_t pin, bool val,char* info)
 {
-        // printf("-------------------------------------------------------WORK'S %s\n",info);
-        // triger_adr[0] = false;
-        // if(triger_adr[1])
-        // {
-                printf("-------------------------------------------------------WORK'S %s\n",info);
-                enable_pca9685_2();
-                if (val) {
-                        setPWM(pin, 4096, 0);
-                }
-                else if (!val) {
-                        setPWM(pin, 0, 4096);
-                }
-        // }
-        // triger_adr[0] = true;
+
+        printf("-------------------------------------------------------WORK'S %s\n",info);
+        enable_pca9685_2();
+        if (val) {
+                setPWM(pin, 4096, 0);
+        }
+        else if (!val) {
+                setPWM(pin, 0, 4096);
+        }
+
+
+        esp_mqtt_publish_string("DEBUG_FILL",info);
 }
 
 

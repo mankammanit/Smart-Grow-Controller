@@ -1,7 +1,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 2.5
+#define FIRMWARE_ESP32 2.6
 
 //ver 0 บอร์ดรุ่นแรกงานคุณมีีน
 //ver 1 บอร์ดรุ่นสองงานคุณอ๊อฟหินบุรีรัมย์[ใช้เป็นมาตรฐาน]

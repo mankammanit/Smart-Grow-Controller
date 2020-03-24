@@ -79,10 +79,13 @@ extern esp_err_t getPWM(uint8_t num, uint16_t* dataOn, uint16_t* dataOff);
 extern esp_err_t fade_all_up_down(void);
 
 //kammanit function
-extern void set_bright(uint8_t num1,uint8_t num2,uint8_t num3,
-                       uint8_t num4,
-                       uint8_t b1,uint8_t b2,uint8_t b3,uint8_t b4
-                       );
+// extern void set_bright(uint8_t num1,uint8_t num2,uint8_t num3,
+//                        uint8_t num4,
+//                        uint8_t b1,uint8_t b2,uint8_t b3,uint8_t b4
+//                        );
+extern void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
+                uint8_t num4,
+                uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4,char* info);
 
 extern uint16_t map(uint8_t x);
 
@@ -95,5 +98,5 @@ extern void disp_buf(uint16_t* buf, uint8_t len);
 extern void pca9685_init(void);
 extern void enable_pca9685_1();
 extern void enable_pca9685_2();
-extern bool triger_adr[2];
+// extern bool triger_adr[2];
 #endif /* PCA9685_DRIVER_H */

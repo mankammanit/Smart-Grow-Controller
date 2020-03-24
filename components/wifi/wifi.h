@@ -55,7 +55,7 @@ void initialise_mqtt_cm(void);
 bool mqtt_is_alive(void);
 void esp_mqtt_publish_string(const char *topic, const char *payload);
 void esp_mqtt_publish_number(const char *topic, const double payload);
-
+void publish_array_object(char *post_data);
 #ifdef __cplusplus
 }
 #endif
