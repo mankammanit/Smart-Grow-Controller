@@ -12,6 +12,14 @@ typedef struct
         uint8_t working_off_h[4];
         uint8_t working_off_m[4];
         uint8_t status_timer[4];
+
+        //fill on timer
+        uint8_t fill_working_on_h[4];
+        uint8_t fill_working_on_m[4];
+        uint8_t fill_working_off_h[4];
+        uint8_t fill_working_off_m[4];
+        uint8_t fill_status_timer[4];
+
 } str_working;
 str_working working_timer;
 
@@ -47,6 +55,12 @@ typedef struct ph_str_val
         float _acidVoltage;    //buffer solution 4.0 at 25C
         float _neutralVoltage; //buffer solution 7.0 at 25C
         float _voltage;
+        float PH_8_VOL;
+        float PH_6_VOL;
+        float PH_5_VOL;
+        float PH_3_VOL;
+        float PH_7_VOL;
+        float PH_4_VOL;
         uint8_t _checkwrite;
 
 } ph_str_val;
@@ -64,7 +78,14 @@ ferti_set ferti_set_val;
 /////////////////////////////////////////////
 typedef struct ec_str_val
 {
+        float _ecvalue;
+        float _rawEC;
+        float _kvalue;
+        float _kvalueLow;
+        float _kvalueHigh;
+        float _voltage;
         float _voltoffset;
+        uint8_t _checkwrite;
 
 } ec_str_val;
 ec_str_val ec_val;

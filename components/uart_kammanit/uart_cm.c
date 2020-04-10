@@ -55,7 +55,7 @@ char *readtft(){
         static char message_tft[256];
         memset(message_tft, 0, sizeof(message_tft));
         const int TFT_BUF_SIZE = BUF_SIZE;
-        esp_log_level_set("RX_TASK2", ESP_LOG_INFO);
+        // esp_log_level_set("RX_TASK2", ESP_LOG_INFO);
         uint8_t* tft_data = (uint8_t*) malloc(TFT_BUF_SIZE+1);
         const int tft_rx = uart_read_bytes(MY_UART2, tft_data, TFT_BUF_SIZE, 10 / portTICK_RATE_MS);
 
@@ -69,7 +69,7 @@ char *readtft(){
                 strcpy(message_tft, (char*)tft_data);
                 // ESP_LOGI("MEMORY", "FREE_HEAP %d", esp_get_free_heap_size());
                 // ESP_LOGI("RX_TASK2", "Read %d bytes: '%s'", tft_rx, tft_data);
-                ESP_LOG_BUFFER_HEXDUMP("RX_TASK2", tft_data, tft_rx, ESP_LOG_INFO);
+                // ESP_LOG_BUFFER_HEXDUMP("RX_TASK2", tft_data, tft_rx, ESP_LOG_INFO);
                 // printf("READ TFT : %s \n", message_tft);
                 // length = strlen(message_tft);
                 // printf("Length of the string : %d\n", length);
@@ -83,7 +83,7 @@ char *readec(){
         static char message_ec[32];
         memset(message_ec, 0, sizeof(message_ec));
         const int EC_BUF_SIZE = BUF_SIZE;
-        esp_log_level_set("RX_TASK1", ESP_LOG_INFO);
+        // esp_log_level_set("RX_TASK1", ESP_LOG_INFO);
         uint8_t* ec_data = (uint8_t*) malloc(EC_BUF_SIZE+1);
         const int ec_rx = uart_read_bytes(MY_UART1, ec_data, EC_BUF_SIZE, 10 / portTICK_RATE_MS);
         if (ec_rx > 0) {

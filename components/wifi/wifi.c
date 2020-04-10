@@ -82,10 +82,12 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
         switch(event->event_id) {
 
         case SYSTEM_EVENT_STA_START:
+                ESP_LOGI("WIFI", "SYSTEM_EVENT_STA_START");
                 esp_wifi_connect();
                 break;
 
         case SYSTEM_EVENT_STA_GOT_IP:
+                ESP_LOGI("WIFI", "SYSTEM_EVENT_STA_GOT_IP");
                 notify_wifi_connected();
                 ESP_LOGI("WIFI", "got ip:%s",
                          ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
@@ -94,14 +96,16 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
                 esp_mqtt_client_start(mqtt_cm);
                 break;
 
+        case SYSTEM_EVENT_STA_CONNECTED:
+                ESP_LOGI("WIFI", "SYSTEM_EVENT_STA_CONNECTED");
+                break;
+
         case SYSTEM_EVENT_STA_DISCONNECTED:
-        {
+                ESP_LOGI("WIFI", "SYSTEM_EVENT_STA_DISCONNECTED");
                 esp_wifi_connect();
                 notify_wifi_disconnected();
                 esp_mqtt_client_stop(mqtt_cm);
                 break;
-        }
-        break;
 
         default:
                 break;
@@ -113,8 +117,8 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 void initialise_wifi()
 {
         ESP_LOGI("WIFI", "Initialising");
-        sprintf(str_name,DEBUG_TFT,"WIFI Initialising");
-        send_tft(str_name);
+        // sprintf(str_name,DEBUG_TFT,"WIFI Initialising");
+        // send_tft(str_name);
 
         wifi_event_group = xEventGroupCreate();
         tcpip_adapter_init();
@@ -131,8 +135,8 @@ void initialise_wifi()
         ESP_ERROR_CHECK(esp_wifi_start());
 
         ESP_LOGI("WIFI", "Connenct SSID %s...", wifi_config.sta.ssid);
-        sprintf(str_name,DEBUG_TFT,"Connenct WIFI...");
-        send_tft(str_name);
+        // sprintf(str_name,DEBUG_TFT,"Connenct WIFI...");
+        // send_tft(str_name);
 }
 
 void wifi_wait_connected()
@@ -184,9 +188,9 @@ void tcip_info()
         }
         else
         {
-                // ESP_LOGI("INFO_WIFI", "Wi-Fi network connection missing");
-                sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
-                send_tft(str_name);
+                ESP_LOGI("WIFI", "Wi-Fi network connection missing");
+                // sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
+                // send_tft(str_name);
         }
 }
 
@@ -366,26 +370,26 @@ void esp_mqtt_publish_number(const char *topic, const double payload)
                         if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
                         else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
 
-                        removeChar(post_data, '{');
-                        removeChar(post_data, '}');
-                        removeChar(post_data, '"');
+                        // removeChar(post_data, '{');
+                        // removeChar(post_data, '}');
+                        // removeChar(post_data, '"');
 
-                        sprintf(str_name,DEBUG_TFT,post_data);
-                        send_tft(str_name);
+                        // sprintf(str_name,DEBUG_TFT,post_data);
+                        // send_tft(str_name);
                         free(post_data);
                 }
                 else
                 {
                         ESP_LOGI("MQTT_CM", "MQTT network connection missing");
-                        sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
-                        send_tft(str_name);
+                        // sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
+                        // send_tft(str_name);
                 }
         }
         else
         {
-                ESP_LOGI("INFO_WIFI", "Wi-Fi network connection missing");
-                sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
-                send_tft(str_name);
+                ESP_LOGI("WIFI", "Wi-Fi network connection missing");
+                // sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
+                // send_tft(str_name);
         }
 }
 void esp_mqtt_publish_string(const char *topic, const char *payload)
@@ -405,60 +409,61 @@ void esp_mqtt_publish_string(const char *topic, const char *payload)
                         if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
                         else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
 
-                        removeChar(post_data, '{');
-                        removeChar(post_data, '}');
-                        removeChar(post_data, '"');
+                        // removeChar(post_data, '{');
+                        // removeChar(post_data, '}');
+                        // removeChar(post_data, '"');
 
-                        sprintf(str_name,DEBUG_TFT,post_data);
-                        send_tft(str_name);
+                        // sprintf(str_name,DEBUG_TFT,post_data);
+                        // send_tft(str_name);
                         free(post_data);
                 }
                 else
                 {
                         ESP_LOGI("MQTT_CM", "MQTT network connection missing");
-                        sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
-                        send_tft(str_name);
+                        // sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
+                        // send_tft(str_name);
                 }
         }
         else
         {
-                ESP_LOGI("INFO_WIFI", "Wi-Fi network connection missing");
-                sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
-                send_tft(str_name);
+                ESP_LOGI("WIFI", "Wi-Fi network connection missing");
+                // sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
+                // send_tft(str_name);
+
         }
 }
 
 void publish_array_object(char *post_data)
 {
-  if(network_is_alive() == true)
-  {
-          if(mqtt_is_alive()==true)
-          {
+        if(network_is_alive() == true)
+        {
+                if(mqtt_is_alive()==true)
+                {
 
-                  if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
-                  else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
+                        if(esp_mqtt_client_publish(mqtt_cm, topic_, post_data, 0, 1, 0));
+                        else ESP_LOGE("MQTT_CM", "MQTT_PUBLISHED_ERROR");
 
-                  removeChar(post_data, '{');
-                  removeChar(post_data, '}');
-                  removeChar(post_data, '"');
+                        // removeChar(post_data, '{');
+                        // removeChar(post_data, '}');
+                        // removeChar(post_data, '"');
 
-                  sprintf(str_name,DEBUG_TFT,post_data);
-                  send_tft(str_name);
-                  free(post_data);
-          }
-          else
-          {
-                  ESP_LOGI("MQTT_CM", "MQTT network connection missing");
-                  sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
-                  send_tft(str_name);
-          }
-  }
-  else
-  {
-          ESP_LOGI("INFO_WIFI", "Wi-Fi network connection missing");
-          sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
-          send_tft(str_name);
-  }
+                        // sprintf(str_name,DEBUG_TFT,post_data);
+                        // send_tft(str_name);
+
+                }
+                else
+                {
+                        ESP_LOGI("MQTT_CM", "MQTT network connection missing");
+                        // sprintf(str_name,DEBUG_TFT,"MQTT network connection missing");
+                        // send_tft(str_name);
+                }
+        }
+        else
+        {
+                ESP_LOGI("WIFI", "Wi-Fi network connection missing");
+                // sprintf(str_name,DEBUG_TFT,"Wi-Fi network connection missing");
+                // send_tft(str_name);
+        }
 }
 
 
@@ -472,8 +477,8 @@ static esp_err_t mqtt_event_handler_cm(esp_mqtt_event_handle_t event)
                 xEventGroupSetBits(event_group, MQTT_CONNECTED_EVENT);
 
                 ESP_LOGI("MQTT_CM", "MQTT_EVENT_CONNECTED");
-                sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_CONNECTED");
-                send_tft(str_name);
+                // sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_CONNECTED");
+                // send_tft(str_name);
 
                 sprintf(subscribed_,CM_SUBSCRIBE,status_pg.mydevice_no);
                 printf("subscribed_ : %s\n", subscribed_);
@@ -484,8 +489,8 @@ static esp_err_t mqtt_event_handler_cm(esp_mqtt_event_handle_t event)
                 xEventGroupClearBits(event_group, MQTT_CONNECTED_EVENT);
                 xEventGroupSetBits(event_group, MQTT_DISCONNECTED_EVENT);
                 ESP_LOGE("MQTT_CM", "MQTT_EVENT_DISCONNECTED");
-                sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_DISCONNECTED");
-                send_tft(str_name);
+                // sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_DISCONNECTED");
+                // send_tft(str_name);
                 break;
         case MQTT_EVENT_SUBSCRIBED:
                 ESP_LOGI("MQTT_CM", "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
@@ -495,8 +500,8 @@ static esp_err_t mqtt_event_handler_cm(esp_mqtt_event_handle_t event)
                 break;
         case MQTT_EVENT_PUBLISHED:
                 ESP_LOGI("MQTT_CM", "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-                sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_PUBLISHED");
-                send_tft(str_name);
+                // sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_PUBLISHED");
+                // send_tft(str_name);
                 break;
         case MQTT_EVENT_DATA:
 
@@ -526,13 +531,13 @@ static esp_err_t mqtt_event_handler_cm(esp_mqtt_event_handle_t event)
                 break;
         case MQTT_EVENT_ERROR:
                 ESP_LOGE("MQTT_CM", "MQTT_EVENT_ERROR");
-                sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_ERROR");
-                send_tft(str_name);
+                // sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_ERROR");
+                // send_tft(str_name);
                 break;
         case MQTT_EVENT_BEFORE_CONNECT:
                 ESP_LOGI("MQTT_CM", "MQTT_EVENT_BEFORE_CONNECT");
-                sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_BEFORE_CONNECT");
-                send_tft(str_name);
+                // sprintf(str_name,DEBUG_TFT,"MQTT_EVENT_BEFORE_CONNECT");
+                // send_tft(str_name);
                 break;
         }
         return ESP_OK;
@@ -552,4 +557,5 @@ void initialise_mqtt_cm()
         };
         mqtt_cm = esp_mqtt_client_init(&mqtt_cfg_cm);
         esp_mqtt_client_start(mqtt_cm);
+
 }

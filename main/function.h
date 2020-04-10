@@ -29,6 +29,8 @@ bool first_start[4][4];
 time_t Timestamp,current_stamp,Pumpstamp;
 bool check_fill_water = true;
 uint16_t Day_Index;
+uint8_t Status_Pump,Status_WaterLV,Status_Fill;
+bool check_water_pump_on_fill_time;
 ///////////////////////////////////////////////
 
 ////////////////// sensor //////////////////////
@@ -59,6 +61,18 @@ static void update_mqtt_cm()
         cJSON_AddStringToObject(root,"PH",ph_tft);
         cJSON_AddStringToObject(root,"EC",ec_tft);
 
+        sprintf(tft_val, "%.1f",read_temperature[0]);
+        cJSON_AddStringToObject(root,"Internal_TEMP",tft_val);
+
+        sprintf(tft_val, "%.1f",read_humidity[0]);
+        cJSON_AddStringToObject(root,"Internal_HUMP",tft_val);
+
+        sprintf(tft_val, "%.1f",read_temperature[1]);
+        cJSON_AddStringToObject(root,"External_TEMP",tft_val);
+
+        sprintf(tft_val, "%.1f",read_humidity[1]);
+        cJSON_AddStringToObject(root,"External_HUMP",tft_val);
+
         if(water_temp > 0 && water_temp < 40.00)
         {
                 cJSON_AddStringToObject(root,"WATER_TEMP",water_tft);
@@ -77,11 +91,19 @@ static void update_mqtt_cm()
                 start_time2.tm_year+1900,start_time2.tm_hour,start_time2.tm_min);
         cJSON_AddStringToObject(root,"START_PUMP",tft_val);
 
+        cJSON_AddNumberToObject(root,"WATER_PUMP",Status_Pump);
+
+        cJSON_AddNumberToObject(root,"Water_LV",Status_WaterLV);
+
+        cJSON_AddNumberToObject(root,"Water_fill",Status_Fill);
+
         char *post_data = cJSON_PrintUnformatted(root);
 
         cJSON_Delete(root);
 
         publish_array_object(post_data);
+
+        free(post_data);
 
 }
 
@@ -97,19 +119,18 @@ static void waterlv()
 
                 sprintf(str_name, WATERLV, 0);
                 send_tft(str_name);
-                esp_mqtt_publish_number("Water_LV", 0);
+                Status_WaterLV = 0;
 
                 if (_environment.solenoide_state == 2)
                 {
                         if (check_fill_water)
                         {
                                 printf("-------------------------------------------------------Fill Water in LV0\n");
-                                esp_mqtt_publish_number("Water_fill", 1);
+                                Status_Fill = 1;
                                 SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
                                 sprintf(str_name, PLAY_SOUND,1,2,0);
                                 send_tft(str_name);
                                 vTaskDelay(2000 / portTICK_RATE_MS);
-                                // bz_tone(Eb8, 600);
                         }
                 }
                 // else printf("solenoide no auto mode\n");
@@ -122,14 +143,14 @@ static void waterlv()
 
                 sprintf(str_name, WATERLV, 35);
                 send_tft(str_name);
-                esp_mqtt_publish_number("Water_LV", 35);
+                Status_WaterLV = 35;
 
                 if (_environment.solenoide_state == 2)
                 {
                         if (check_fill_water)
                         {
                                 printf("-------------------------------------------------------Fill Water in LV1\n");
-                                esp_mqtt_publish_number("Water_fill", 1);
+                                Status_Fill = 1;
                                 SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
                         }
                 }
@@ -141,13 +162,13 @@ static void waterlv()
 
                 sprintf(str_name, WATERLV, 70);
                 send_tft(str_name);
-                esp_mqtt_publish_number("Water_LV", 70);
+                Status_WaterLV = 70;
                 if (_environment.solenoide_state == 2)
                 {
                         if (check_fill_water)
                         {
                                 printf("-------------------------------------------------------Fill Water in LV2\n");
-                                esp_mqtt_publish_number("Water_fill", 1);
+                                Status_Fill = 1;
                                 SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
                         }
                 }
@@ -158,19 +179,18 @@ static void waterlv()
                 // printf("Detect Water LV3\n");
                 sprintf(str_name, WATERLV, 100);
                 send_tft(str_name);
-                esp_mqtt_publish_number("Water_LV", 100);
+                Status_WaterLV = 100;
 
                 if (_environment.solenoide_state == 2)
                 {
                         if (check_fill_water)
                         {
                                 printf("-------------------------------------------------------Fill Water in LV3\n");
-                                esp_mqtt_publish_number("Water_fill", 1);
+                                Status_Fill = 1;
                                 SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                 check_fill_water = false;
-                                esp_mqtt_publish_number("Water_fill", 0);
+                                Status_Fill = 0;
                         }
-                        // else esp_mqtt_publish_number("Water_fill",0);
                 }
                 // else printf("solenoide no auto mode\n");
 
@@ -254,7 +274,7 @@ static void read_sensor_all()
         water_temp = ds18b20_get_temp();
         if(water_temp > 0 && water_temp < 40.00)
         {
-                sprintf(water_tft, "%.2f",ec_value);
+                sprintf(water_tft, "%.1f",water_temp);
                 sprintf(str_name,WATER_TEMP_SEND,water_tft);
                 send_tft(str_name);
         }
@@ -278,8 +298,7 @@ static uint8_t list_my_stage()
         Timestamp_day = (Timestamp / 86400) + status_pg.start_day;
         planted_state_1 = (time_pg.dayoff[0] - time_pg.dayon[0])+1;
         planted_state_2 = (time_pg.dayoff[1] - time_pg.dayon[1])+planted_state_1+1;
-        //ส่งค่าวันที่ปลูก
-        status_pg.start_day = Timestamp_day;
+
         if(status_pg.switch_mode ==1)
         {
                 sprintf(tft_val, "%d", Timestamp_day);
@@ -307,6 +326,25 @@ static uint8_t list_my_stage()
         }
 
         return 0;
+}
+
+static void check_light_on_off()
+{
+        for (uint8_t stage =0; stage<3; stage++)
+        {
+                for(uint8_t zone = 0; zone <4; zone++)
+                {
+                        if (betweenTimes(time_pg.pg_hour_on[stage][zone], time_pg.pg_hour_off[stage][zone],
+                                         time_pg.pg_min_on[stage][zone], time_pg.pg_min_off[stage][zone]))
+                        {
+                                first_start[stage][zone] = true;
+                        }
+                        else
+                        {
+                                first_start[stage][zone] = false;
+                        }
+                }
+        }
 }
 
 static void input_light_stage(uint8_t stage)
@@ -382,69 +420,71 @@ static void input_light_stage(uint8_t stage)
                 else
                 {
                         // printf("-------------------------------------------------------LED_ZONE%d_OFF\n",zone+1);
-
-                        if(zone==0)
+                        if (first_start[stage][zone] == false)
                         {
-                                printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
-                                set_bright(ZONE1_LED1, ZONE1_LED2, ZONE1_LED3, ZONE1_LED4,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           "AUTO_ZONE1_OFF");
+                                if(zone==0)
+                                {
+                                        printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
+                                        set_bright(ZONE1_LED1, ZONE1_LED2, ZONE1_LED3, ZONE1_LED4,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   "AUTO_ZONE1_OFF");
 
-                                mqttpgzone[zone]="LED_ZONE1_OFF";
-                                mqttpgsch[zone]="PG_Schedule1";
+                                        mqttpgzone[zone]="LED_ZONE1_OFF";
+                                        mqttpgsch[zone]="PG_Schedule1";
 
                                 #if REVISION==2
-                                SETFILL(PWM12CH2,false,"PWM12CH2_OFF");
+                                        SETFILL(PWM12CH2,false,"PWM12CH2_OFF");
                                 #endif
 
+                                }
+                                else if(zone==1)
+                                {
+                                        printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
+                                        set_bright(ZONE2_LED1, ZONE2_LED2, ZONE2_LED3, ZONE2_LED4,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   "AUTO_ZONE2_OFF");
+
+                                        mqttpgzone[zone]="LED_ZONE2_OFF";
+                                        mqttpgsch[zone]="PG_Schedule2";
+                                }
+                                else if(zone==2)
+                                {
+                                        printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
+                                        set_bright(ZONE3_LED1, ZONE3_LED2, ZONE3_LED3, ZONE3_LED4,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   "AUTO_ZONE3_OFF");
+
+                                        mqttpgzone[zone]="LED_ZONE3_OFF";
+                                        mqttpgsch[zone]="PG_Schedule3";
+
+                                }
+                                else if(zone==3)
+                                {
+                                        printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
+                                        set_bright(ZONE4_LED1, ZONE4_LED2, ZONE4_LED3, ZONE4_LED4,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   "AUTO_ZONE4_OFF");
+
+                                        mqttpgzone[zone]="LED_ZONE4_OFF";
+                                        mqttpgsch[zone]="PG_Schedule4";
+
+                                }
+                                first_start[stage][zone] = true;
                         }
-                        else if(zone==1)
-                        {
-                                printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
-                                set_bright(ZONE2_LED1, ZONE2_LED2, ZONE2_LED3, ZONE2_LED4,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           "AUTO_ZONE2_OFF");
-
-                                mqttpgzone[zone]="LED_ZONE2_OFF";
-                                mqttpgsch[zone]="PG_Schedule2";
-                        }
-                        else if(zone==2)
-                        {
-                                printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
-                                set_bright(ZONE3_LED1, ZONE3_LED2, ZONE3_LED3, ZONE3_LED4,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           "AUTO_ZONE3_OFF");
-
-                                mqttpgzone[zone]="LED_ZONE3_OFF";
-                                mqttpgsch[zone]="PG_Schedule3";
-
-                        }
-                        else if(zone==3)
-                        {
-                                printf("-------------------------------------------------------SET LED_ZONE%d_OFF\n",zone+1);
-                                set_bright(ZONE4_LED1, ZONE4_LED2, ZONE4_LED3, ZONE4_LED4,
-                                           0,
-                                           0,
-                                           0,
-                                           0,
-                                           "AUTO_ZONE4_OFF");
-
-                                mqttpgzone[zone]="LED_ZONE4_OFF";
-                                mqttpgsch[zone]="PG_Schedule4";
-
-                        }
-                        first_start[stage][zone] = true;
                 }
-                vTaskDelay(50 / portTICK_PERIOD_MS);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
         }
 }
 
@@ -504,50 +544,9 @@ static uint8_t call_status_pump()
                 if (working_timer.working_day == 0 )
                 {
                         printf("-------------------------------------------------------Every day\n");
-                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
-                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
+                        check_water_pump_on_fill_time = true;
+                        if(_environment.pump_water_state==2)
                         {
-                                if(working_timer.status_timer[0] == 1)
-                                {
-                                        return 1;
-
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
-                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
-                        {
-                                if(working_timer.status_timer[1] == 1)
-                                {
-                                        return 2;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
-                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
-                        {
-                                if(working_timer.status_timer[2] == 1)
-                                {
-                                        return 3;
-                                }
-                        }
-                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
-                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
-                        {
-                                if(working_timer.status_timer[3] == 1)
-                                {
-                                        return 4;
-                                }
-                        }
-                        else return 0;
-                }
-                else if (working_timer.working_day !=0)
-                {
-                        printf("-------------------------------------------------------Some day\n");
-
-                        if(Day_Index==1)
-
-                        {
-                                printf("-------------------------------------------------------Some day 1st 1Days\n");
-
                                 if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
                                                  working_timer.working_on_m[0], working_timer.working_off_m[0]))
                                 {
@@ -581,116 +580,236 @@ static uint8_t call_status_pump()
                                                 return 4;
                                         }
                                 }
-
                                 else return 0;
+
                         }
-                        else if(Day_Index == working_timer.working_nextday)
+                        else if (working_timer.working_day !=0)
                         {
+                                printf("-------------------------------------------------------Some day\n");
 
-                                working_timer.working_lastday = Day_Index;
-                                save_working(working_timer);
+                                if(Day_Index==1)
 
-                                printf("-------------------------------------------------------Some day work is %d\n",working_timer.working_lastday);
-
-                                if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
-                                                 working_timer.working_on_m[0], working_timer.working_off_m[0]))
                                 {
-                                        if(working_timer.status_timer[0] == 1)
+                                        printf("-------------------------------------------------------Some day 1st 1Days\n");
+                                        check_water_pump_on_fill_time = true;
+                                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
+                                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
                                         {
-                                                return 1;
+                                                if(working_timer.status_timer[0] == 1)
+                                                {
+                                                        return 1;
 
+                                                }
                                         }
-                                }
-                                else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
-                                                      working_timer.working_on_m[1], working_timer.working_off_m[1]))
-                                {
-                                        if(working_timer.status_timer[1] == 1)
+                                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
+                                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
                                         {
-                                                return 2;
+                                                if(working_timer.status_timer[1] == 1)
+                                                {
+                                                        return 2;
+                                                }
                                         }
-                                }
-                                else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
-                                                      working_timer.working_on_m[2], working_timer.working_off_m[2]))
-                                {
-                                        if(working_timer.status_timer[2] == 1)
+                                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
+                                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
                                         {
-                                                return 3;
+                                                if(working_timer.status_timer[2] == 1)
+                                                {
+                                                        return 3;
+                                                }
                                         }
-                                }
-                                else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
-                                                      working_timer.working_on_m[3], working_timer.working_off_m[3]))
-                                {
-                                        if(working_timer.status_timer[3] == 1)
+                                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
+                                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
                                         {
-                                                return 4;
+                                                if(working_timer.status_timer[3] == 1)
+                                                {
+                                                        return 4;
+                                                }
                                         }
+
+                                        else return 0;
+                                }
+                                else if(Day_Index == working_timer.working_nextday)
+                                {
+                                        check_water_pump_on_fill_time = true;
+                                        working_timer.working_lastday = Day_Index;
+                                        save_working(working_timer);
+
+                                        printf("-------------------------------------------------------Some day work is %d\n",working_timer.working_lastday);
+
+                                        if (betweenTimes(working_timer.working_on_h[0], working_timer.working_off_h[0],
+                                                         working_timer.working_on_m[0], working_timer.working_off_m[0]))
+                                        {
+                                                if(working_timer.status_timer[0] == 1)
+                                                {
+                                                        return 1;
+
+                                                }
+                                        }
+                                        else if (betweenTimes(working_timer.working_on_h[1], working_timer.working_off_h[1],
+                                                              working_timer.working_on_m[1], working_timer.working_off_m[1]))
+                                        {
+                                                if(working_timer.status_timer[1] == 1)
+                                                {
+                                                        return 2;
+                                                }
+                                        }
+                                        else if (betweenTimes(working_timer.working_on_h[2], working_timer.working_off_h[2],
+                                                              working_timer.working_on_m[2], working_timer.working_off_m[2]))
+                                        {
+                                                if(working_timer.status_timer[2] == 1)
+                                                {
+                                                        return 3;
+                                                }
+                                        }
+                                        else if (betweenTimes(working_timer.working_on_h[3], working_timer.working_off_h[3],
+                                                              working_timer.working_on_m[3], working_timer.working_off_m[3]))
+                                        {
+                                                if(working_timer.status_timer[3] == 1)
+                                                {
+                                                        return 4;
+                                                }
+                                        }
+
+                                        else return 0;
+                                }
+                                else if(Day_Index != working_timer.working_nextday)
+                                {
+                                        check_water_pump_on_fill_time = false;
+                                        working_timer.working_nextday = Day_Index + working_timer.working_day;
+                                        save_working(working_timer);
+
+                                        printf("-------------------------------------------------------Next work day %d\n",
+                                               working_timer.working_nextday);
                                 }
 
-                                else return 0;
                         }
-                        else if(Day_Index != working_timer.working_nextday)
-                        {
-                                working_timer.working_nextday = Day_Index + working_timer.working_day;
-                                save_working(working_timer);
-
-                                printf("-------------------------------------------------------Next work day %d\n",
-                                       working_timer.working_nextday);
-                        }
-
                 }
         }
 
-        else if(_environment.pump_water_state==1) return 5;
+        else if(_environment.pump_water_state==1)
+        {
+                check_water_pump_on_fill_time = false;
+                return 5;
+        }
 
-        else return 6;
+        else
+        {
+                check_water_pump_on_fill_time = false;
+                return 6;
+        }
 
         return 0;
 }
+
 
 static void call_time_waterpump()
 {
 
         switch (call_status_pump()) {
 
-        case 1:
+        case 1:         //mode auto time1
                 printf("-------------------------------------------------------PUMP Fer in TIME1 (MODE-ON)\n");
                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
-                esp_mqtt_publish_number("WATER_PUMP", 1);
+                Status_Pump = 1;
 
                 break;
-        case 2:
+        case 2:         //mode auto time2
                 printf("-------------------------------------------------------PUMP Fer in TIME2 (MODE-ON)\n");
                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
-                esp_mqtt_publish_number("WATER_PUMP", 1);
+                Status_Pump = 1;
 
                 break;
-        case 3:
+        case 3:         //mode auto time3
                 printf("-------------------------------------------------------PUMP Fer in TIME3 (MODE-ON)\n");
                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
-                esp_mqtt_publish_number("WATER_PUMP", 1);
+                Status_Pump = 1;
 
                 break;
-        case 4:
+        case 4:         //mode auto time4
                 printf("-------------------------------------------------------PUMP Fer in TIME4 (MODE-ON)\n");
                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
-                esp_mqtt_publish_number("WATER_PUMP", 1);
+                Status_Pump = 1;
 
                 break;
-        case 0:
+        case 0:         //mode auto off
                 printf("-------------------------------------------------------PUMP Fer ALL (MODE-OFF)\n");
                 SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
-                esp_mqtt_publish_number("WATER_PUMP", 0);
+                Status_Pump = 0;
                 break;
-        case 5: //mode on
+        case 5:         //mode on
                 printf("-------------------------------------------------------PUMP Fer ALL (MANUAL-ON)\n");
                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
-                esp_mqtt_publish_number("WATER_PUMP", 1);
+                Status_Pump = 1;
                 break;
-        case 6: //mode off
+        case 6:         //mode off
                 printf("-------------------------------------------------------PUMP Fer ALL (MANUAL-OFF)\n");
                 SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
-                esp_mqtt_publish_number("WATER_PUMP", 0);
+                Status_Pump = 0;
                 break;
+        }
+}
+
+static void call_fill_mode_time()
+{
+        if(_environment.solenoide_state==3)
+        {
+                printf("-------------------------------------------------------Solenoide MODE TIME\n");
+                if(check_water_pump_on_fill_time)
+                {
+                        printf("-------------------------------------------------------Solenoide Check Pump Work Day\n");
+                        if(Status_WaterLV<100)
+                        {
+                                printf("-------------------------------------------------------Solenoide Check Water LV < 100\n");
+                                if (betweenTimes(working_timer.fill_working_on_h[0], working_timer.fill_working_off_h[0],
+                                                 working_timer.fill_working_on_m[0], working_timer.fill_working_off_m[0]))
+                                {
+                                        if(working_timer.fill_status_timer[0] == 1)
+                                        {
+                                                SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
+                                                Status_Fill=1;
+
+                                        }
+                                }
+                                else if (betweenTimes(working_timer.fill_working_on_h[1], working_timer.fill_working_off_h[1],
+                                                      working_timer.fill_working_on_m[1], working_timer.fill_working_off_m[1]))
+                                {
+                                        if(working_timer.fill_status_timer[1] == 1)
+                                        {
+                                                SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
+                                                Status_Fill=1;
+                                        }
+                                }
+                                else if (betweenTimes(working_timer.fill_working_on_h[2], working_timer.fill_working_off_h[2],
+                                                      working_timer.fill_working_on_m[2], working_timer.fill_working_off_m[2]))
+                                {
+                                        if(working_timer.fill_status_timer[2] == 1)
+                                        {
+                                                SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
+                                                Status_Fill=1;
+                                        }
+                                }
+                                else if (betweenTimes(working_timer.fill_working_on_h[3], working_timer.fill_working_off_h[3],
+                                                      working_timer.fill_working_on_m[3], working_timer.fill_working_off_m[3]))
+                                {
+                                        if(working_timer.fill_status_timer[3] == 1)
+                                        {
+                                                SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
+                                                Status_Fill=1;
+                                        }
+                                }
+                                else
+                                {
+                                        SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
+                                        Status_Fill=0;
+                                }
+
+                        }
+                }
+                else
+                {
+                        SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
+                        Status_Fill=0;
+                }
         }
 }
 
@@ -742,6 +861,48 @@ static void update_dashboard()
                 send_tft(str_name);
         }
 
+        if(working_timer.fill_status_timer[0] == 1)
+        {
+                sprintf(str_name, DASH_TFILL1,18);
+                send_tft(str_name);
+        }
+        else
+        {
+                sprintf(str_name, DASH_TFILL1,17);
+                send_tft(str_name);
+        }
+        if(working_timer.fill_status_timer[1] == 1)
+        {
+                sprintf(str_name, DASH_TFILL2,18);
+                send_tft(str_name);
+        }
+        else
+        {
+                sprintf(str_name, DASH_TFILL2,17);
+                send_tft(str_name);
+        }
+        if(working_timer.fill_status_timer[2] == 1)
+        {
+                sprintf(str_name, DASH_TFILL3,18);
+                send_tft(str_name);
+        }
+        else
+        {
+                sprintf(str_name, DASH_TFILL3,17);
+                send_tft(str_name);
+        }
+        if(working_timer.fill_status_timer[3] == 1)
+        {
+                sprintf(str_name, DASH_TFILL4,18);
+                send_tft(str_name);
+        }
+        else
+        {
+                sprintf(str_name, DASH_TFILL4,17);
+                send_tft(str_name);
+        }
+
+
         sprintf(tft_val, "%02d", working_timer.working_on_h[0]);
         sprintf(tft_val2, "%02d", working_timer.working_on_m[0]);
         sprintf(tft_val3, "%02d", working_timer.working_off_h[0]);
@@ -770,6 +931,34 @@ static void update_dashboard()
         sprintf(str_name, PUMP_TIME4, tft_val, tft_val2,tft_val3,tft_val4);
         send_tft(str_name);
 
+        sprintf(tft_val, "%02d", working_timer.fill_working_on_h[0]);
+        sprintf(tft_val2, "%02d", working_timer.fill_working_on_m[0]);
+        sprintf(tft_val3, "%02d", working_timer.fill_working_off_h[0]);
+        sprintf(tft_val4, "%02d", working_timer.fill_working_off_m[0]);
+        sprintf(str_name, PUMP_FILL1, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
+        sprintf(tft_val, "%02d", working_timer.fill_working_on_h[1]);
+        sprintf(tft_val2, "%02d", working_timer.fill_working_on_m[1]);
+        sprintf(tft_val3, "%02d", working_timer.fill_working_off_h[1]);
+        sprintf(tft_val4, "%02d", working_timer.fill_working_off_m[1]);
+        sprintf(str_name, PUMP_FILL2, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
+        sprintf(tft_val, "%02d", working_timer.fill_working_on_h[2]);
+        sprintf(tft_val2, "%02d", working_timer.fill_working_on_m[2]);
+        sprintf(tft_val3, "%02d", working_timer.fill_working_off_h[2]);
+        sprintf(tft_val4, "%02d", working_timer.fill_working_off_m[2]);
+        sprintf(str_name, PUMP_FILL3, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
+        sprintf(tft_val, "%02d", working_timer.fill_working_on_h[3]);
+        sprintf(tft_val2, "%02d", working_timer.fill_working_on_m[3]);
+        sprintf(tft_val3, "%02d", working_timer.fill_working_off_h[3]);
+        sprintf(tft_val4, "%02d", working_timer.fill_working_off_m[3]);
+        sprintf(str_name, PUMP_FILL4, tft_val, tft_val2,tft_val3,tft_val4);
+        send_tft(str_name);
+
 
         switch (_environment.solenoide_state)
         {
@@ -783,6 +972,11 @@ static void update_dashboard()
                 break;
         case 2:
                 sprintf(str_name, DASH_SOLENOIDE, "AUTO");
+                send_tft(str_name);
+                break;
+
+        case 3:
+                sprintf(str_name, DASH_SOLENOIDE, "TIME");
                 send_tft(str_name);
                 break;
         }

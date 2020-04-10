@@ -38,6 +38,9 @@ bool read_time(struct tm *start_time);
 void save_environment(environment ptr);
 bool read_environment(environment *ptr);
 ///////////////////////////////////////
+void save_time_pump(struct tm *start_time2);
+bool read_time_pump(struct tm *start_time2);
+///////////////////////////////////////
 esp_err_t resetfactory();
 void load_default_nvs();
 void save_working(str_working ptr);

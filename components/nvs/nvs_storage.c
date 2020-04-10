@@ -296,6 +296,80 @@ bool read_time(struct tm *start_time)
         }
 }
 
+void save_time_pump(struct tm *start_time2)
+{
+        // Write
+        // printf("\n");
+        // printf("save start_time_state\n");
+        nvs_handle my_handle;
+        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+        if (err != ESP_OK)
+        {
+                printf("Error (%d) opening NVS handle!\n", err);
+        }
+        else
+        {
+                // printf("Write start_time_state Done\n");
+                // Write
+                // printf("Updating restart counter in NVS ... ");
+                err = nvs_set_blob(my_handle, "time_state2", start_time2, sizeof(struct tm));
+                // printf((err != ESP_OK) ? "Failed!\n" : "start_time_state Done\n");
+
+                // printf("Committing updates in NVS ... ");
+                err = nvs_commit(my_handle);
+                printf((err != ESP_OK) ? "Failed!\n" : "Write start_time_state Done\n");
+
+                // Close
+                nvs_close(my_handle);
+        }
+}
+
+bool read_time_pump(struct tm *start_time2)
+{
+        // Open
+        // printf("\n");
+        // printf("read start_time_state\n");
+        nvs_handle my_handle;
+        esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
+        if (err != ESP_OK)
+        {
+                printf("Error (%d) opening NVS handle!\n", err);
+                return false;
+        }
+        else
+        {
+                // printf("Read start_time_state Done\n");
+                // Read
+                // printf("Reading restart counter from NVS ...\n");
+                size_t size_read = 0;
+                err = nvs_get_blob(my_handle, "time_state2", NULL, &size_read);
+                if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND)
+                        return err;
+
+                // printf("size :%d\n", size_read);
+
+                err = nvs_get_blob(my_handle, "time_state2", start_time2, &size_read);
+                switch (err)
+                {
+                case ESP_OK:
+                        // printf("Done\n");
+                        // printf("Restart counter = %d\n", size_read);
+
+                        break;
+                case ESP_ERR_NVS_NOT_FOUND:
+                        // printf("The value is not initialized yet!\n");
+                        return false;
+                        break;
+                default:
+                        // printf("Error (%d) reading!\n", err);
+                        return false;
+                        break;
+                }
+                nvs_close(my_handle);
+                return true;
+        }
+}
+
 void save_program(timepg ptr)
 {
         // Write
@@ -685,11 +759,42 @@ void load_default_nvs()
         working_timer.working_nextday = 0;
         working_timer.working_lastday = 0;
 
+
+        working_timer.fill_working_on_h[0] = 8;
+        working_timer.fill_working_on_m[0] = 0;
+        working_timer.fill_working_off_h[0] = 8;
+        working_timer.fill_working_off_m[0] = 10;
+
+        working_timer.fill_working_on_h[1] = 9;
+        working_timer.fill_working_on_m[1] = 0;
+        working_timer.fill_working_off_h[1] = 9;
+        working_timer.fill_working_off_m[1] = 10;
+
+        working_timer.fill_working_on_h[2] = 10;
+        working_timer.fill_working_on_m[2] = 0;
+        working_timer.fill_working_off_h[2] = 10;
+        working_timer.fill_working_off_m[2] = 10;
+
+        working_timer.fill_working_on_h[3] = 11;
+        working_timer.fill_working_on_m[3] = 0;
+        working_timer.fill_working_off_h[3] = 11;
+        working_timer.fill_working_off_m[3] = 10;
+
+        working_timer.fill_status_timer[0] = 0;
+        working_timer.fill_status_timer[1] = 0;
+        working_timer.fill_status_timer[2] = 0;
+        working_timer.fill_status_timer[3] = 0;
+
         save_working(working_timer);
 
         status_pg.switch_mode = 0;
         status_pg.OTA_NEXTION = 1;
         save_statuspg(status_pg);
+
+        ec_val._checkwrite=0;
+        save_ec_kvalue(ec_val);
+        ph_val._checkwrite=0;
+        save_ph_kvalue(ph_val);
 
         read_statuspg(&status_pg);
         sprintf(str_name, DAY_PLANTED, status_pg.start_day);

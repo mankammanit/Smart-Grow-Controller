@@ -1,11 +1,11 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 2.6
+#define FIRMWARE_ESP32 4.1
 
 //ver 0 บอร์ดรุ่นแรกงานคุณมีีน
 //ver 1 บอร์ดรุ่นสองงานคุณอ๊อฟหินบุรีรัมย์[ใช้เป็นมาตรฐาน]
-//ver 2 Special LAB C
+//ver 2 Special LAB b
 #define REVISION 1
 
 //task ec
@@ -119,6 +119,12 @@ char str_name[256];
 #define PUMP_TIME2              "Dashboard.d_tpump2.txt=\"%s:%s-%s:%s\"" TFTEND
 #define PUMP_TIME3              "Dashboard.d_tpump3.txt=\"%s:%s-%s-%s\"" TFTEND
 #define PUMP_TIME4              "Dashboard.d_tpump4.txt=\"%s:%s-%s-%s\"" TFTEND
+
+#define PUMP_FILL1              "Dashboard.t0.txt=\"%s:%s-%s:%s\"" TFTEND
+#define PUMP_FILL2              "Dashboard.t1.txt=\"%s:%s-%s:%s\"" TFTEND
+#define PUMP_FILL3              "Dashboard.t2.txt=\"%s:%s-%s-%s\"" TFTEND
+#define PUMP_FILL4              "Dashboard.t3.txt=\"%s:%s-%s-%s\"" TFTEND
+
 #define MODE                    "Dashboard.d_mode.txt=\"%s\"" TFTEND
 #define DASH_STAGE              "Dashboard.d_stage.txt=\"%s\"" TFTEND
 #define MODE_COLOR              "Dashboard.d_mode.pco=%d" TFTEND
@@ -170,6 +176,11 @@ char str_name[256];
 #define DASH_TPUMP2            "Dashboard.time2.pic=%d" TFTEND
 #define DASH_TPUMP3            "Dashboard.time3.pic=%d" TFTEND
 #define DASH_TPUMP4            "Dashboard.time4.pic=%d" TFTEND
+
+#define DASH_TFILL1            "Dashboard.p0.pic=%d" TFTEND
+#define DASH_TFILL2            "Dashboard.p1.pic=%d" TFTEND
+#define DASH_TFILL3            "Dashboard.p2.pic=%d" TFTEND
+#define DASH_TFILL4            "Dashboard.p3.pic=%d" TFTEND
 
 //ratio menu
 #define TXT_ZONE1_LED1          "Light_Main.z1_led1.val=%d" TFTEND
@@ -293,13 +304,9 @@ char str_name[256];
 #define WAIT_WIFI               "wait.val=%d" TFTEND
 
 //FERTILIZER
-#define INFO_BUFF_PH            "t0.txt=\"PH %s\"" TFTEND
-#define INFO_BUFF_PH_2          "t0.txt=\"NOW %s\"" TFTEND
-#define INFO_BUFF_PH_3          "t0.txt=\"Analog %s\"" TFTEND
-#define INFO_BUFF_EC            "t0.txt=\"EC %s\"" TFTEND
-#define INFO_BUFF_EC_2          "t0.txt=\"OFFSET %s\"" TFTEND
-#define INFO_BUFF_EC_3          "t0.txt=\"NOW %s\"" TFTEND
-#define INFO_BUFF_EC_4          "t0.txt=\"Analog %s\"" TFTEND
+#define INFO_BUFF_PH            "t0.txt=\"%s\"" TFTEND
+#define INFO_BUFF_EC            "t0.txt=\"%s\"" TFTEND
+#define ANALOG_PH               "x0.val=%d" TFTEND
 #define PER_BUFF                "j1.val=%d" TFTEND
 
 #define fer_LOOPTIME_           "Fertilizer.n4.val=%d" TFTEND
@@ -319,10 +326,32 @@ char str_name[256];
 #define fer_TIMERON_M4          "Fertilizer.n18.val=%d" TFTEND
 #define fer_TIMEROFF_H4         "Fertilizer.n19.val=%d" TFTEND
 #define fer_TIMEROFF_M4         "Fertilizer.n20.val=%d" TFTEND
-#define FER_TPUMP1              "Fertilizer.time1.pic=%d" TFTEND
-#define FER_TPUMP2              "Fertilizer.time2.pic=%d" TFTEND
-#define FER_TPUMP3              "Fertilizer.time3.pic=%d" TFTEND
-#define FER_TPUMP4              "Fertilizer.time4.pic=%d" TFTEND
+
+#define fill_TIMERON_H           "Fertilizer.n21.val=%d" TFTEND
+#define fill_TIMERON_M           "Fertilizer.n22.val=%d" TFTEND
+#define fill_TIMEROFF_H          "Fertilizer.n23.val=%d" TFTEND
+#define fill_TIMEROFF_M          "Fertilizer.n24.val=%d" TFTEND
+#define fill_TIMERON_H2          "Fertilizer.n25.val=%d" TFTEND
+#define fill_TIMERON_M2          "Fertilizer.n26.val=%d" TFTEND
+#define fill_TIMEROFF_H2         "Fertilizer.n27.val=%d" TFTEND
+#define fill_TIMEROFF_M2         "Fertilizer.n28.val=%d" TFTEND
+#define fill_TIMERON_H3          "Fertilizer.n29.val=%d" TFTEND
+#define fill_TIMERON_M3          "Fertilizer.n30.val=%d" TFTEND
+#define fill_TIMEROFF_H3         "Fertilizer.n31.val=%d" TFTEND
+#define fill_TIMEROFF_M3         "Fertilizer.n32.val=%d" TFTEND
+#define fill_TIMERON_H4          "Fertilizer.n33.val=%d" TFTEND
+#define fill_TIMERON_M4          "Fertilizer.n34.val=%d" TFTEND
+#define fill_TIMEROFF_H4         "Fertilizer.n35.val=%d" TFTEND
+#define fill_TIMEROFF_M4         "Fertilizer.n36.val=%d" TFTEND
+#define FER_TPUMP1               "Fertilizer.time1.pic=%d" TFTEND
+#define FER_TPUMP2               "Fertilizer.time2.pic=%d" TFTEND
+#define FER_TPUMP3               "Fertilizer.time3.pic=%d" TFTEND
+#define FER_TPUMP4               "Fertilizer.time4.pic=%d" TFTEND
+
+#define FER_TFILL1               "Fertilizer.fill0.pic=%d" TFTEND
+#define FER_TFILL2               "Fertilizer.fill1.pic=%d" TFTEND
+#define FER_TFILL3               "Fertilizer.fill2.pic=%d" TFTEND
+#define FER_TFILL4               "Fertilizer.fill3.pic=%d" TFTEND
 
 
 #define VERSION_FW              "x0.val=%d" TFTEND
@@ -348,6 +377,11 @@ char str_name[256];
 #define SET_STATUS_TPUMP2       "Set_pump.sw1.val=%d" TFTEND
 #define SET_STATUS_TPUMP3       "Set_pump.sw2.val=%d" TFTEND
 #define SET_STATUS_TPUMP4       "Set_pump.sw3.val=%d" TFTEND
+
+#define SET_STATUS_TFILL1       "Set_fill.sw0.val=%d" TFTEND
+#define SET_STATUS_TFILL2       "Set_fill.sw1.val=%d" TFTEND
+#define SET_STATUS_TFILL3       "Set_fill.sw2.val=%d" TFTEND
+#define SET_STATUS_TFILL4       "Set_fill.sw3.val=%d" TFTEND
 
 
 //DEBUG
@@ -419,6 +453,7 @@ enum tft_cmd
         SET_PUMPCONTROL                           = 0x32,
         SET_FERTILIZER                            = 0x3a,
         PAGE_SET_FERTILIZER                       = 0x3b,
+        SET_FILL_TIME                             = 0x3e,
 
         PAGE_ENVIRONMENT                          = 0x40,
         SET_ENVIRONMENT                           = 0x41,
@@ -441,6 +476,8 @@ enum tft_cmd
         SET_CALIBRATE_EC                          = 0x61,
         PAGE_CALIBRATE_PH                         = 0x62,
         SET_CALIBRATE_PH                          = 0x63,
+        PAGE_VOLTAGE_PH                           = 0x6a,
+        SET_VOLTAGE_PH                            = 0x6b,
 
         PAGE_COMMUNITY                            = 0x7a,
 

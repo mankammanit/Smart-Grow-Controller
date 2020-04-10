@@ -21,8 +21,14 @@
 #include "nvs_storage.h"
 
 
-// #define NEX_OTA_URL               "http://34.87.44.19/Container_1_0.tft"  /* URL to Nextion firmware */
-#define NEX_OTA_URL               "http://183.88.218.59:5090/fw_contain/Container_1_0.tft"  /* URL to Nextion firmware */
+#if REVISION==1
+#define NEX_OTA_URL               "http://183.88.218.59:5090/fw_grow_controller/Container_1_0.tft"  /* URL to Nextion firmware */
+#elif REVISION==2
+#define NEX_OTA_URL               "http://183.88.218.59:5090/fw_grow_controller_lab_b/Container_1_0.tft"  /* URL to Nextion firmware */
+#else
+#define NEX_OTA_URL               "http://183.88.218.59:5090/fw_grow_controller_ver1/Container_1_0.tft"  /* URL to Nextion firmware */
+#endif
+
 #define NEX_ACK_TIMEOUT           500000                  /* Nextion ack timeout (500ms) */
 #define MAX_HTTP_RECV_BUFFER      4096                    /* Http buffer, same as Nextion packet size (4096) */
 
@@ -37,7 +43,7 @@ static int nex_ota_uart_read(uint8_t *uart_data, size_t size)
 								if (!uart_data) return 0;
 
 								memset(uart_data, 0, size);
-  							const int tft_rx = uart_read_bytes(MY_UART2, uart_data, size, 10 / portTICK_RATE_MS);
+								const int tft_rx = uart_read_bytes(MY_UART2, uart_data, size, 10 / portTICK_RATE_MS);
 
 								// ESP_LOGI("RX_TASK2", "Read %d bytes: '%s'", tft_rx, uart_data);
 								// ESP_LOG_BUFFER_HEXDUMP("RX_TASK2", uart_data, tft_rx, ESP_LOG_INFO);

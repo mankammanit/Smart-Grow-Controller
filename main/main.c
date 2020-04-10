@@ -46,13 +46,18 @@ static void task_timer_sch(void *pvParameters)
         struct tm time;
         readValue(&time);
         read_time(&start_time);
-        read_time(&start_time2);
+        read_time_pump(&start_time2);
 
         while (1)
         {
                 CHECK_ERROR_CODE(esp_task_wdt_reset(), ESP_OK); //Comment this line to trigger a TWDT timeout
                 // printf("Task running on core %d\n",xPortGetCoreID());
                 ESP_LOGI("ESP32", "[APP] Free memory: %d bytes", esp_get_free_heap_size());
+
+
+                sprintf(tft_val, "My memory is %d", esp_get_free_heap_size());
+                sprintf(str_name,DEBUG_TFT,tft_val);
+                send_tft(str_name);
 
                 ///clock
                 Timestamp     = difftime(mktime(&time)+time_since_boot, mktime(&start_time));
@@ -78,6 +83,7 @@ static void task_timer_sch(void *pvParameters)
                 call_time_waterpump();
                 task_feeding_all();
                 waterlv();
+                call_fill_mode_time();
 
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
@@ -150,7 +156,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                 {
                         // printf("recv[%d] = %02x,%d\n", i, dtmp[i],dtmp[i]);
                         dtmp[i] -= 1;
-                        ESP_LOGI("RX_TASK1", "RECV[%d]:%x,%d,%c", i, dtmp[i], dtmp[i], dtmp[i]);
+                        ESP_LOGI("RX_TASK2", "RECV[%d]:%x,%d,%c", i, dtmp[i], dtmp[i], dtmp[i]);
                 }
 
                 switch (dtmp[0])
@@ -266,6 +272,31 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 working_timer.working_day = 0;
                                 working_timer.working_nextday = 0;
                                 working_timer.working_lastday = 0;
+
+                                working_timer.fill_working_on_h[0] = 8;
+                                working_timer.fill_working_on_m[0] = 0;
+                                working_timer.fill_working_off_h[0] = 8;
+                                working_timer.fill_working_off_m[0] = 10;
+
+                                working_timer.fill_working_on_h[1] = 9;
+                                working_timer.fill_working_on_m[1] = 0;
+                                working_timer.fill_working_off_h[1] = 9;
+                                working_timer.fill_working_off_m[1] = 10;
+
+                                working_timer.fill_working_on_h[2] = 10;
+                                working_timer.fill_working_on_m[2] = 0;
+                                working_timer.fill_working_off_h[2] = 10;
+                                working_timer.fill_working_off_m[2] = 10;
+
+                                working_timer.fill_working_on_h[3] = 11;
+                                working_timer.fill_working_on_m[3] = 0;
+                                working_timer.fill_working_off_h[3] = 11;
+                                working_timer.fill_working_off_m[3] = 10;
+
+                                working_timer.fill_status_timer[0] = 0;
+                                working_timer.fill_status_timer[1] = 0;
+                                working_timer.fill_status_timer[2] = 0;
+                                working_timer.fill_status_timer[3] = 0;
 
                                 save_working(working_timer);
                         }
@@ -414,19 +445,11 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 break;
                         }
 
-                        // first_start = true;
-                        for(uint8_t i = 0; i < 4; i++)
-                        {
-                                for(uint8_t j = 0; j < 4; j++)
-                                        first_start[i][j] = true;
-                        }
+                        check_light_on_off();
 
                         start_dosing_ec = true;
                         start_dosing_ph = true;
 
-                        //triger switch adr i2c
-                        // triger_adr[0] = true;
-                        // triger_adr[1] = true;
 
                         break;
                 case PAGE_HOME:
@@ -439,16 +462,11 @@ static void RECV_CALL_TFT(void *pvParameter)
                         update_dashboard();
                         sprintf(tft_val,"%02d/%02d %02d:%02d",start_time2.tm_mday,start_time2.tm_mon+1,
                                 start_time2.tm_hour,start_time2.tm_min);
-                        sprintf(str_name, PLOT_TXT,653,316,85,20,tft_val);
+                        sprintf(str_name, PLOT_TXT,457,316,85,20,tft_val);
                         send_tft(str_name);
 
-                        ////////////////////////////////////////////
-                        for(uint8_t i = 0; i < 4; i++)
-                        {
-                                for(uint8_t j = 0; j < 4; j++)
-                                        first_start[i][j] = true;
-                        }
-                        ///////////////////////////////////////////
+                        check_light_on_off();
+
                         break;
 
                 case PAGE_RATIO:
@@ -590,7 +608,7 @@ static void RECV_CALL_TFT(void *pvParameter)
 
                         printf("case PAGE_PROGRAM\n");
 
-                        sprintf(str_name, DAY_PLANTED, status_pg.start_day);
+                        sprintf(str_name, DAY_PLANTED, Timestamp_day);
                         send_tft(str_name);
 
                         //protect
@@ -1310,11 +1328,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                         }
                         save_program(time_pg);
 
-                        for(uint8_t i = 0; i < 4; i++)
-                        {
-                                for(uint8_t j = 0; j < 4; j++)
-                                        first_start[i][j] = true;
-                        }
+                        check_light_on_off();
 
                         break;
 
@@ -1577,11 +1591,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                         }
                         save_program(time_pg);
 
-                        for(uint8_t i = 0; i < 4; i++)
-                        {
-                                for(uint8_t j = 0; j < 4; j++)
-                                        first_start[i][j] = true;
-                        }
+                        check_light_on_off();
 
                         break;
 
@@ -1601,11 +1611,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 status_pg.start_day = dtmp[1];
                         save_statuspg(status_pg);
 
-                        for(uint8_t i = 0; i < 4; i++)
-                        {
-                                for(uint8_t j = 0; j < 4; j++)
-                                        first_start[i][j] = true;
-                        }
+                        check_light_on_off();
 
                         break;
 
@@ -1619,12 +1625,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 status_pg.switch_mode = dtmp[1];
                                 save_statuspg(status_pg);
 
-                                for(uint8_t i = 0; i < 4; i++)
-                                {
-                                        for(uint8_t j = 0; j < 4; j++)
-                                                first_start[i][j] = true;
-                                }
-
+                                check_light_on_off();
 
                                 set_bright(ZONE1_LED1, ZONE1_LED2, ZONE1_LED3, ZONE1_LED4,
                                            ratio_led.bright_1[0],
@@ -1662,12 +1663,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 status_pg.switch_mode = dtmp[1];
                                 save_statuspg(status_pg);
 
-                                for(uint8_t i = 0; i < 4; i++)
-                                {
-                                        for(uint8_t j = 0; j < 4; j++)
-                                                first_start[i][j] = true;
-                                }
-
+                                check_light_on_off();
 
                                 break;
                         }
@@ -1766,6 +1762,96 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 sprintf(str_name, FER_TPUMP4,17);
                                 send_tft(str_name);
                                 sprintf(str_name, SET_STATUS_TPUMP4,0);
+                                send_tft(str_name);
+                        }
+
+                        sprintf(str_name, fill_TIMERON_H, working_timer.fill_working_on_h[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_M, working_timer.fill_working_on_m[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_H, working_timer.fill_working_off_h[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_M, working_timer.fill_working_off_m[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_H2, working_timer.fill_working_on_h[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_M2, working_timer.fill_working_on_m[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_H2, working_timer.fill_working_off_h[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_M2, working_timer.fill_working_off_m[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_H3, working_timer.fill_working_on_h[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_M3, working_timer.fill_working_on_m[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_H3, working_timer.fill_working_off_h[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_M3, working_timer.fill_working_off_m[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_H4, working_timer.fill_working_on_h[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMERON_M4, working_timer.fill_working_on_m[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_H4, working_timer.fill_working_off_h[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, fill_TIMEROFF_M4, working_timer.fill_working_off_m[3]);
+                        send_tft(str_name);
+
+                        if(working_timer.fill_status_timer[0] == 1)
+                        {
+                                sprintf(str_name, FER_TFILL1,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL1,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TPUMP1,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL1,0);
+                                send_tft(str_name);
+                        }
+                        if(working_timer.fill_status_timer[1] == 1)
+                        {
+                                sprintf(str_name, FER_TFILL2,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL2,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TFILL2,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL2,0);
+                                send_tft(str_name);
+                        }
+                        if(working_timer.fill_status_timer[2] == 1)
+                        {
+                                sprintf(str_name, FER_TFILL3,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL3,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TFILL3,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL3,0);
+                                send_tft(str_name);
+                        }
+                        if(working_timer.fill_status_timer[3] == 1)
+                        {
+                                sprintf(str_name, FER_TFILL4,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL4,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TFILL4,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TFILL4,0);
                                 send_tft(str_name);
                         }
 
@@ -1868,10 +1954,40 @@ static void RECV_CALL_TFT(void *pvParameter)
                         working_timer.working_lastday = 0;
                         save_working(working_timer);
 
-                        save_working(working_timer);
-
                         readValue(&start_time2);
-                        save_time(&start_time2);
+                        save_time_pump(&start_time2);
+
+                        break;
+
+                case SET_FILL_TIME:
+                        printf("case SET_FILL_TIME\n");
+
+                        working_timer.fill_working_on_h[0] = dtmp[1];
+                        working_timer.fill_working_on_m[0] = dtmp[2];
+                        working_timer.fill_working_off_h[0] = dtmp[3];
+                        working_timer.fill_working_off_m[0] = dtmp[4];
+
+                        working_timer.fill_working_on_h[1] = dtmp[5];
+                        working_timer.fill_working_on_m[1] = dtmp[6];
+                        working_timer.fill_working_off_h[1] = dtmp[7];
+                        working_timer.fill_working_off_m[1] = dtmp[8];
+
+                        working_timer.fill_working_on_h[2] = dtmp[9];
+                        working_timer.fill_working_on_m[2] = dtmp[10];
+                        working_timer.fill_working_off_h[2] = dtmp[11];
+                        working_timer.fill_working_off_m[2] = dtmp[12];
+
+                        working_timer.fill_working_on_h[3] = dtmp[13];
+                        working_timer.fill_working_on_m[3] = dtmp[14];
+                        working_timer.fill_working_off_h[3] = dtmp[15];
+                        working_timer.fill_working_off_m[3] = dtmp[16];
+
+                        working_timer.fill_status_timer[0] = dtmp[17];
+                        working_timer.fill_status_timer[1] = dtmp[18];
+                        working_timer.fill_status_timer[2] = dtmp[19];
+                        working_timer.fill_status_timer[3] = dtmp[20];
+
+                        save_working(working_timer);
 
                         break;
 
@@ -1956,15 +2072,19 @@ static void RECV_CALL_TFT(void *pvParameter)
 
                         switch (_environment.solenoide_state) {
                         case 0:
-                                sprintf(str_name,SOLENOIDE_STATE,41);
+                                sprintf(str_name,SOLENOIDE_STATE,68);
                                 send_tft(str_name);
                                 break;
                         case 1:
-                                sprintf(str_name,SOLENOIDE_STATE,40);
+                                sprintf(str_name,SOLENOIDE_STATE,65);
                                 send_tft(str_name);
                                 break;
                         case 2:
-                                sprintf(str_name,SOLENOIDE_STATE,42);
+                                sprintf(str_name,SOLENOIDE_STATE,66);
+                                send_tft(str_name);
+                                break;
+                        case 3:
+                                sprintf(str_name,SOLENOIDE_STATE,67);
                                 send_tft(str_name);
                                 break;
                         }
@@ -2100,6 +2220,11 @@ static void RECV_CALL_TFT(void *pvParameter)
                                         printf("SOLENOIDE to mode AUTO\n");
                                         SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                         break;
+
+                                case 3:
+                                        printf("SOLENOIDE to mode TIME\n");
+                                        SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
+                                        break;
                                 }
                                 _environment.solenoide_state = dtmp[2];
                                 break;
@@ -2127,59 +2252,104 @@ static void RECV_CALL_TFT(void *pvParameter)
 
                 case PAGE_CALIBRATE_EC:
                         printf("case PAGE_CALIBRATE_EC\n");
-                        sprintf(tft_val, "%f", ec_read(ec_val_plot));
-                        sprintf(str_name, INFO_BUFF_EC_3, tft_val);
+                        sprintf(str_name,PER_BUFF,0);
+                        send_tft(str_name);
+                        sprintf(tft_val, "EC %.2f", ec_read(ec_val_plot));
+                        sprintf(str_name, INFO_BUFF_EC, tft_val);
                         send_tft(str_name);
                         vTaskDelay(1000 / portTICK_RATE_MS);
-                        sprintf(tft_val, "%d", ec_val_plot);
-                        sprintf(str_name, INFO_BUFF_PH_3, tft_val);
+                        sprintf(tft_val, "Analog %d", ec_val_plot);
+                        sprintf(str_name, INFO_BUFF_EC, tft_val);
                         send_tft(str_name);
+                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        ec_calibration(ec_val_plot, 1);
+                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        ec_calibration(ec_val_plot, 2);
+
                         break;
 
                 case PAGE_CALIBRATE_PH:
                         printf("case PAGE_CALIBRATE_PH\n");
-                        sprintf(tft_val, "%f", ph_value);
-                        sprintf(str_name, INFO_BUFF_PH_2, tft_val);
+                        sprintf(str_name,PER_BUFF,0);
+                        send_tft(str_name);
+                        sprintf(tft_val, "pH %.2f", ph_value);
+                        sprintf(str_name, INFO_BUFF_PH, tft_val);
                         send_tft(str_name);
                         vTaskDelay(1000 / portTICK_RATE_MS);
-                        sprintf(tft_val, "%4.2f", adc_reading_buff);
-                        sprintf(str_name, INFO_BUFF_PH_3, tft_val);
+                        sprintf(tft_val, "Analog %.2f", adc_reading_buff);
+                        sprintf(str_name, INFO_BUFF_PH, tft_val);
                         send_tft(str_name);
+                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        calibration(adc_reading_buff, 1);
+                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        calibration(adc_reading_buff, 2);
                         break;
 
                 case SET_CALIBRATE_EC:
                         printf("case SET_CALIBRATE_EC\n");
-                        sprintf(tft_val, "%f", ec_read(ec_val_plot));
-                        sprintf(str_name, INFO_BUFF_EC, tft_val);
-                        send_tft(str_name);
-                        sprintf(str_name, PER_BUFF, 40);
-                        send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
-                        sprintf(tft_val, "%d", calibrat_ec(ec_val_plot));
-                        sprintf(str_name, INFO_BUFF_EC_2, tft_val);
-                        send_tft(str_name);
-                        sprintf(str_name, PER_BUFF, 60);
-                        send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
-                        sprintf(tft_val, "%f", ec_read(ec_val_plot));
-                        sprintf(str_name, INFO_BUFF_EC, tft_val);
-                        send_tft(str_name);
-                        sprintf(str_name, PER_BUFF, 100);
-                        send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        ec_calibration(ec_val_plot, 3);
                         break;
 
                 case SET_CALIBRATE_PH:
                         printf("case SET_CALIBRATE_PH\n");
-                        sprintf(tft_val, "%4.2f", adc_reading_buff);
-                        sprintf(str_name, INFO_BUFF_PH_3, tft_val);
-                        send_tft(str_name);
-                        calibration(adc_reading_buff, 1);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
-                        calibration(adc_reading_buff, 2);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
                         calibration(adc_reading_buff, 3);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        break;
+
+                case PAGE_VOLTAGE_PH:
+                        printf("case PAGE_VOLTAGE_PH\n");
+                        int ph__ =  (float)adc_reading_buff*100;
+                        sprintf(str_name, ANALOG_PH,ph__);
+                        send_tft(str_name);
+                        break;
+
+                case SET_VOLTAGE_PH:
+                        switch (dtmp[1]) {
+                        case 1:   // PH_4
+                                printf("case SET_VOLTAGE_PH 4\n");
+                                if (dtmp[3] > 0 && dtmp[4]==0)
+                                {
+                                        uint16_t val = dtmp[3] * 256 + dtmp[2];
+                                        ph_val.PH_4_VOL = ((float)val/10);
+                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-100.00;
+                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+100.00;
+                                        printf("case SET_VOLTAGE_PH 4 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
+                                               ph_val.PH_4_VOL,ph_val.PH_3_VOL);
+                                }
+                                else if (dtmp[4]>0)
+                                {
+                                        uint32_t val = ((dtmp[4]*65536) + (dtmp[3]* 256)) + dtmp[2];
+                                        ph_val.PH_4_VOL = ((float)val/100);
+                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-100.00;
+                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+100.00;
+                                        printf("case SET_VOLTAGE_PH 4 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
+                                               ph_val.PH_4_VOL,ph_val.PH_3_VOL);
+                                }
+
+                                break;
+                        case 2:   // PH_7
+                                printf("case SET_VOLTAGE_PH 7\n");
+                                if (dtmp[3] > 0 && dtmp[4]==0)
+                                {
+                                        uint16_t val = dtmp[3] * 256 + dtmp[2];
+                                        ph_val.PH_7_VOL = ((float)val/10);
+                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-100.00;
+                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+100.00;
+                                        printf("case SET_VOLTAGE_PH 7 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
+                                               ph_val.PH_7_VOL,ph_val.PH_6_VOL);
+                                }
+                                else if (dtmp[4]>0)
+                                {
+                                        uint32_t val = ((dtmp[4]*65536) + (dtmp[3]* 256)) + dtmp[2];
+                                        ph_val.PH_7_VOL = ((float)val/100);
+                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-100.00;
+                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+100.00;
+                                        printf("case SET_VOLTAGE_PH 7 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
+                                               ph_val.PH_7_VOL,ph_val.PH_6_VOL);
+                                }
+
+                                save_ph_kvalue(ph_val);
+                                break;
+                        }
                         break;
 
                 case PAGE_DATE:
@@ -2405,6 +2575,7 @@ static void periodic_timer_callback(void* arg)
 
 }
 
+
 void app_main()
 {
 
@@ -2438,7 +2609,7 @@ void app_main()
                 ;
         else
         {
-                status_pg.mydevice_no = 1;
+                status_pg.mydevice_no = 0;
                 status_pg.switch_mode = 0;
                 status_pg.OTA_NEXTION = 1;
                 save_statuspg(status_pg);
@@ -2479,6 +2650,7 @@ void app_main()
 
         //ANALOG MODE
         init_ph(); /* init ph */
+        ec_add_val(); /* init ec */
 
         //DIGITAL MODE
         app_buzzer_cfg(); /* init buzzer */
@@ -2512,11 +2684,12 @@ void app_main()
         //0ms
         xTaskCreate(RECV_CALL_TFT, "RECV_CALL_TFT", 10240, NULL, 5, &task_2);
 
-        //5000 ms
-        xTaskCreate(read_sensor_task, "read_sensor_task", 3072, NULL, 3, &task_4);
+        //10000 ms
+        xTaskCreate(read_sensor_task, "read_sensor_task", 4096, NULL, 3, &task_4);
 
 
         vTaskDelay(500 / portTICK_RATE_MS);
 
         TFT_RESTART(); /* rest tft */
+
 }

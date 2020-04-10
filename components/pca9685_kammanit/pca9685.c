@@ -514,7 +514,10 @@ void pca9685_init(void)
 void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
                 uint8_t num4,
                 uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4,char* info)
+
 {
+        printf("-------------------------------------------------------WORK'S %s\n",info);
+        
         // enable_pca9685_1();
         if (b1 == 255)
                 b1 = 0;
@@ -538,8 +541,7 @@ void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
         if(b4==0) setPWM(num4, 4096, 0);
         else setPWM(num4, map(b4), 0);
 
-
-        esp_mqtt_publish_string("DEBUG_BRIGHT",info);
+        // esp_mqtt_publish_string("DEBUG_BRIGHT",info);
 
 }
 

@@ -33,7 +33,7 @@ void SETFILL(uint8_t pin, bool val,char* info)
         }
 
 
-        esp_mqtt_publish_string("DEBUG_FILL",info);
+        // esp_mqtt_publish_string("DEBUG_FILL",info);
 }
 
 
@@ -74,10 +74,10 @@ long buf_ontimeA,
      buf_wating_time,
      buf_wating_time_ph;
 
-int on_timeA = 5, //10secs
-    on_timeB = 5,
-    on_timeC = 5,
-    on_timeD = 5,
+int on_timeA = 1,
+    on_timeB = 1,
+    on_timeC = 1,
+    on_timeD = 1,
     on_timepH = 5,
     wating_time = 30,
     wating_time_ph = 30;
@@ -167,7 +167,8 @@ void task_feeding_all()
                                 }
                                 else
                                 {
-                                        buf_ontimeA = (feed_stamp + on_timeA) * ratio_time[0];
+                                        // buf_ontimeA = (feed_stamp + on_timeA) * ratio_time[0];
+                                        buf_ontimeA = feed_stamp + (on_timeA * ratio_time[0]);
                                 }
 
                                 start_dosing_ec = false;
@@ -235,7 +236,8 @@ pump_b:
                                 {
                                         // printf("Fer B BUFF\n");
                                         buf_ontimeA = 0;
-                                        buf_ontimeB = (feed_stamp + on_timeB) * ratio_time[1];
+                                        // buf_ontimeB = (feed_stamp + on_timeB) * ratio_time[1];
+                                          buf_ontimeB = feed_stamp + (on_timeB * ratio_time[1]);
                                 }
                                 // printf("%s", asctime(localtime(&feed_stamp)));
                                 // printf("Feedstamp: %ld\n\n", feed_stamp);
@@ -299,7 +301,8 @@ pump_c:
                                 else
                                 {
                                         buf_ontimeB = 0;
-                                        buf_ontimeC = (feed_stamp + on_timeC) * ratio_time[2];
+                                        // buf_ontimeC = (feed_stamp + on_timeC) * ratio_time[2];
+                                        buf_ontimeC = feed_stamp + (on_timeC * ratio_time[2]);
                                 }
                                 // printf("%s", asctime(localtime(&feed_stamp)));
                                 // printf("Feedstamp: %ld\n\n", feed_stamp);
@@ -363,7 +366,8 @@ pump_d:
                                 else
                                 {
                                         buf_ontimeC = 0;
-                                        buf_ontimeD = (feed_stamp + on_timeD) * ratio_time[3];
+                                        // buf_ontimeD = (feed_stamp + on_timeD) * ratio_time[3];
+                                        buf_ontimeD = feed_stamp + (on_timeD * ratio_time[3]);
                                 }
 
                                 // printf("%s", asctime(localtime(&feed_stamp)));
@@ -576,9 +580,9 @@ wait_time:
 
                 if (ec_value < ec_setpoint && (ec_setpoint - ec_value) > below_setpoint_ec && ec_setpoint!=0.0)
                 {
-                        // printf("EC setpoint->%0.2f", ec_setpoint);
-                        // printf(" value->%0.2f", ec_value);
-                        // printf(" diff->%0.2f>%0.2f\n", ec_setpoint - ec_value, below_setpoint_ec);
+                //         printf("EC setpoint->%0.2f", ec_setpoint);
+                //         printf(" value->%0.2f", ec_value);
+                //         printf(" diff->%0.2f>%0.2f\n", ec_setpoint - ec_value, below_setpoint_ec);
                         // printf("Debug ratio a:b:c:d->%d:%d:%d:%d\n", ratio_time[0], ratio_time[1],
                         //        ratio_time[2], ratio_time[3]);
                         printf("-------------------------------------------------------Dosing A,B,C,D Now!\n");
