@@ -86,8 +86,9 @@ extern esp_err_t fade_all_up_down(void);
 extern void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
                 uint8_t num4,
                 uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4,char* info);
-
+extern void SETFILL(uint8_t pin, bool val,char* info);
 extern uint16_t map(uint8_t x);
+extern uint8_t PCA9685_ADDR;
 
 extern esp_err_t generic_write_i2c_register_two_words(uint8_t regaddr, uint16_t valueOn, uint16_t valueOff);
 extern esp_err_t generic_write_i2c_register_word(uint8_t regaddr, uint16_t value);
@@ -96,7 +97,6 @@ extern esp_err_t generic_read_i2c_register_word(uint8_t regaddr, uint16_t* value
 extern esp_err_t generic_read_two_i2c_register(uint8_t regaddr, uint8_t* valueA, uint8_t* valueB);
 extern void disp_buf(uint16_t* buf, uint8_t len);
 extern void pca9685_init(void);
-extern void enable_pca9685_1();
-extern void enable_pca9685_2();
-// extern bool triger_adr[2];
+
+
 #endif /* PCA9685_DRIVER_H */

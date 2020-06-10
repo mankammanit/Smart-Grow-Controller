@@ -163,6 +163,7 @@ static void RECV_CALL_TFT(void *pvParameter)
                 {
                 case PAGE_LOADING:
                         printf("case PAGE_LOADING\n");
+
                         //1st load nvs default
                         if (read_ratio(&ratio_led))
                                 ;
@@ -212,13 +213,28 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 ;
                         else
                         {
-                                _environment.fill1_state=0;
-                                _environment.fill2_state=0;
-                                _environment.fill3_state=0;
-                                _environment.fill4_state=0;
-                                _environment.pump_ph_state=0;
-                                _environment.solenoide_state=0;
-                                _environment.pump_water_state=0;
+                                //mode off default
+                                _environment.fill1_state=MODE_OFF;
+                                _environment.fill2_state=MODE_OFF;
+                                _environment.fill3_state=MODE_OFF;
+                                _environment.fill4_state=MODE_OFF;
+                                _environment.pump_ph_state=MODE_OFF;
+                                _environment.solenoide_state=MODE_OFF;
+                                _environment.pump_water_state=MODE_OFF;
+
+                                //dutycycle high default
+                                _environment.fill1_duty=DUTY_HIGH;
+                                _environment.fill2_duty=DUTY_HIGH;
+                                _environment.fill3_duty=DUTY_HIGH;
+                                _environment.fill4_duty=DUTY_HIGH;
+                                _environment.pump_ph_duty=DUTY_HIGH;
+
+                                //calibration fill1-4 (EC)
+                                _environment.fill1_caribrate=1;
+                                _environment.fill2_caribrate=1;
+                                _environment.fill3_caribrate=1;
+                                _environment.fill4_caribrate=1;
+
                                 save_environment(_environment);
                         }
 
@@ -228,13 +244,38 @@ static void RECV_CALL_TFT(void *pvParameter)
                         {
                                 ferti_set_val.ec_set_point = 12;
                                 ferti_set_val.ph_set_point = 68;
-
                                 for (uint8_t i = 0; i < 4; i++)
                                 {
                                         ferti_set_val.ratio_fer[i] = 1;
-                                        ferti_set_val.ratio_fer[i] = 1;
-                                        ferti_set_val.ratio_fer[i] = 1;
                                 }
+                                ferti_set_val.ph_working_on_h[0] = 8;
+                                ferti_set_val.ph_working_on_m[0] = 0;
+                                ferti_set_val.ph_working_off_h[0] = 8;
+                                ferti_set_val.ph_working_off_m[0] = 10;
+
+                                ferti_set_val.ph_working_on_h[1] = 9;
+                                ferti_set_val.ph_working_on_m[1] = 0;
+                                ferti_set_val.ph_working_off_h[1] = 9;
+                                ferti_set_val.ph_working_off_m[1] = 10;
+
+                                ferti_set_val.ph_working_on_h[2] = 10;
+                                ferti_set_val.ph_working_on_m[2] = 0;
+                                ferti_set_val.ph_working_off_h[2] = 10;
+                                ferti_set_val.ph_working_off_m[2] = 10;
+
+                                ferti_set_val.ph_working_on_h[3] = 11;
+                                ferti_set_val.ph_working_on_m[3] = 0;
+                                ferti_set_val.ph_working_off_h[3] = 11;
+                                ferti_set_val.ph_working_off_m[3] = 10;
+
+                                ferti_set_val.ph_status_timer[0] = 0;
+                                ferti_set_val.ph_status_timer[1] = 0;
+                                ferti_set_val.ph_status_timer[2] = 0;
+                                ferti_set_val.ph_status_timer[3] = 0;
+
+                                ferti_set_val.ratio_ph = 1;
+                                ferti_set_val.wait_ph = 10;
+                                ferti_set_val.wait_ec = 10;
                                 save_ferti(ferti_set_val);
                         }
 
@@ -340,106 +381,114 @@ static void RECV_CALL_TFT(void *pvParameter)
                                    "LOAD_MANUAL_ZONE4");
 
                         switch (_environment.fill1_state) {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_FILL_1 (A) to mode OFF\n");
                                 SETFILL(PUMP_A,false,"PUMP_A_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_FILL_1 (A) to mode ON\n");
                                 SETFILL(PUMP_A,true,"PUMP_A_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_FILL_1 (A) to mode AUTO\n");
                                 SETFILL(PUMP_A,false,"PUMP_A_OFF");
                                 break;
                         }
                         switch (_environment.fill2_state) {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_FILL_2 (B) to mode OFF\n");
                                 SETFILL(PUMP_B,false,"PUMP_B_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_FILL_2 (B) to mode ON\n");
                                 SETFILL(PUMP_B,true,"PUMP_B_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_FILL_2 (B) to mode AUTO\n");
                                 SETFILL(PUMP_B,false,"PUMP_B_OFF");
                                 break;
                         }
 
                         switch (_environment.fill3_state) {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_FILL_3 (C) to mode OFF\n");
                                 SETFILL(PUMP_C,false,"PUMP_C_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_FILL_3 (C) to mode ON\n");
                                 SETFILL(PUMP_C,true,"PUMP_C_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_FILL_3 (C) to mode AUTO\n");
                                 SETFILL(PUMP_C,false,"PUMP_C_OFF");
                                 break;
                         }
 
                         switch (_environment.fill4_state) {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_FILL_4 (D) to mode OFF\n");
                                 SETFILL(PUMP_D,false,"PUMP_D_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_FILL_4 (D) to mode ON\n");
                                 SETFILL(PUMP_D,true,"PUMP_D_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_FILL_4 (D) to mode AUTO\n");
                                 SETFILL(PUMP_D,false,"PUMP_D_OFF");
                                 break;
                         }
 
                         switch (_environment.pump_ph_state) {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_FILL_PH to mode OFF\n");
                                 SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_FILL_PH to mode ON\n");
                                 SETFILL(PUMP_PH,true,"PUMP_PH_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_FILL_PH to mode AUTO\n");
+                                SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
+                                break;
+                        case MODE_TIME:
+                                printf("PUMP_FILL_PH to mode TIME\n");
                                 SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
                                 break;
                         }
 
                         switch (_environment.solenoide_state)
                         {
-                        case 0:
+                        case MODE_OFF:
                                 printf("SOLENOIDE to mode OFF\n");
                                 SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("SOLENOIDE to mode ON\n");
                                 SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("SOLENOIDE to mode AUTO\n");
                                 SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
+                                break;
+                        case MODE_TIME:
+                                printf("PUMP_FILL_PH to mode TIME\n");
+                                SETFILL(SOLENOIDE,false,"SOLENOIDE_OFF");
                                 break;
                         }
 
                         switch (_environment.pump_water_state)
                         {
-                        case 0:
+                        case MODE_OFF:
                                 printf("PUMP_WATER to mode OFF\n");
                                 SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 printf("PUMP_WATER to mode ON\n");
                                 SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 printf("PUMP_WATER to mode AUTO\n");
                                 SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
                                 break;
@@ -450,10 +499,10 @@ static void RECV_CALL_TFT(void *pvParameter)
                         start_dosing_ec = true;
                         start_dosing_ph = true;
 
-
                         break;
                 case PAGE_HOME:
                         printf("case PAGE_HOME\n");
+                        call_time(1);
                         break;
 
                 case DASH_BOARD:
@@ -1868,37 +1917,102 @@ static void RECV_CALL_TFT(void *pvParameter)
                         sprintf(str_name, SET_RATIO_D, ferti_set_val.ratio_fer[3]);
                         send_tft(str_name);
 
-                        sprintf(str_name, SET_EC_POINT_, ferti_set_val.ec_set_point);
+                        sprintf(str_name, SET_RATIO_PH, ferti_set_val.ratio_ph);
                         send_tft(str_name);
-                        sprintf(str_name, SET_PH_POINT_, ferti_set_val.ph_set_point);
+                        sprintf(str_name, WAIT_EC_, ferti_set_val.wait_ec);
                         send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_A_, ferti_set_val.ratio_fer[0]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_B_, ferti_set_val.ratio_fer[1]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_C_, ferti_set_val.ratio_fer[2]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_D_, ferti_set_val.ratio_fer[3]);
+                        sprintf(str_name, WAIT_PH_, ferti_set_val.wait_ph);
                         send_tft(str_name);
 
-                        break;
+                        sprintf(str_name, ph_TIMERON_H, ferti_set_val.ph_working_on_h[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_M, ferti_set_val.ph_working_on_m[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_H, ferti_set_val.ph_working_off_h[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_M, ferti_set_val.ph_working_off_m[0]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_H2, ferti_set_val.ph_working_on_h[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_M2, ferti_set_val.ph_working_on_m[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_H2, ferti_set_val.ph_working_off_h[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_M2, ferti_set_val.ph_working_off_m[1]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_H3, ferti_set_val.ph_working_on_h[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_M3, ferti_set_val.ph_working_on_m[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_H3, ferti_set_val.ph_working_off_h[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_M3, ferti_set_val.ph_working_off_m[2]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_H4, ferti_set_val.ph_working_on_h[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMERON_M4, ferti_set_val.ph_working_on_m[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_H4, ferti_set_val.ph_working_off_h[3]);
+                        send_tft(str_name);
+                        sprintf(str_name, ph_TIMEROFF_M4, ferti_set_val.ph_working_off_m[3]);
+                        send_tft(str_name);
 
-                case PAGE_SET_FERTILIZER:
-                        printf("case PAGE_SET_FERTILIZER\n");
-
-
-                        sprintf(str_name, SET_EC_POINT, ferti_set_val.ec_set_point);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_PH_POINT, ferti_set_val.ph_set_point);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_A, ferti_set_val.ratio_fer[0]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_B, ferti_set_val.ratio_fer[1]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_C, ferti_set_val.ratio_fer[2]);
-                        send_tft(str_name);
-                        sprintf(str_name, SET_RATIO_D, ferti_set_val.ratio_fer[3]);
-                        send_tft(str_name);
+                        if(ferti_set_val.ph_status_timer[0] == 1)
+                        {
+                                sprintf(str_name, FER_TPH1,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH1,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TPH1,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH1,0);
+                                send_tft(str_name);
+                        }
+                        if(ferti_set_val.ph_status_timer[1] == 1)
+                        {
+                                sprintf(str_name, FER_TPH2,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH2,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TPH2,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH2,0);
+                                send_tft(str_name);
+                        }
+                        if(ferti_set_val.ph_status_timer[2] == 1)
+                        {
+                                sprintf(str_name, FER_TPH3,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH3,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TPH3,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH3,0);
+                                send_tft(str_name);
+                        }
+                        if(ferti_set_val.ph_status_timer[3] == 1)
+                        {
+                                sprintf(str_name, FER_TPH4,18);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH4,1);
+                                send_tft(str_name);
+                        }
+                        else
+                        {
+                                sprintf(str_name, FER_TPH4,17);
+                                send_tft(str_name);
+                                sprintf(str_name, SET_STATUS_TPH4,0);
+                                send_tft(str_name);
+                        }
 
                         break;
 
@@ -1913,13 +2027,41 @@ static void RECV_CALL_TFT(void *pvParameter)
                         ferti_set_val.ratio_fer[2] = dtmp[12];
                         ferti_set_val.ratio_fer[3] = dtmp[13];
 
+                        ferti_set_val.ratio_ph = dtmp[14];
+                        ferti_set_val.wait_ec = dtmp[15];
+                        ferti_set_val.wait_ph = dtmp[16];
+
+                        ferti_set_val.ph_working_on_h[0] = dtmp[17];
+                        ferti_set_val.ph_working_on_m[0] = dtmp[18];
+                        ferti_set_val.ph_working_off_h[0] = dtmp[19];
+                        ferti_set_val.ph_working_off_m[0] = dtmp[20];
+
+                        ferti_set_val.ph_working_on_h[1] = dtmp[21];
+                        ferti_set_val.ph_working_on_m[1] = dtmp[22];
+                        ferti_set_val.ph_working_off_h[1] = dtmp[23];
+                        ferti_set_val.ph_working_off_m[1] = dtmp[24];
+
+                        ferti_set_val.ph_working_on_h[2] = dtmp[25];
+                        ferti_set_val.ph_working_on_m[2] = dtmp[26];
+                        ferti_set_val.ph_working_off_h[2] = dtmp[27];
+                        ferti_set_val.ph_working_off_m[2] = dtmp[28];
+
+                        ferti_set_val.ph_working_on_h[3] = dtmp[29];
+                        ferti_set_val.ph_working_on_m[3] = dtmp[30];
+                        ferti_set_val.ph_working_off_h[3] = dtmp[31];
+                        ferti_set_val.ph_working_off_m[3] = dtmp[32];
+
+                        ferti_set_val.ph_status_timer[0] = dtmp[33];
+                        ferti_set_val.ph_status_timer[1] = dtmp[34];
+                        ferti_set_val.ph_status_timer[2] = dtmp[35];
+                        ferti_set_val.ph_status_timer[3] = dtmp[36];
+
                         save_ferti(ferti_set_val);
                         start_dosing_ec = true;
                         start_dosing_ph = true;
                         expression_task = fer_ok;
 
                         break;
-
 
                 case SET_PUMPCONTROL:
                         printf("case SET_PUMPCONTROL\n");
@@ -1996,109 +2138,113 @@ static void RECV_CALL_TFT(void *pvParameter)
                         read_environment(&_environment);
 
                         switch (_environment.fill1_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,FILL_STATE_A,41);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,FILL_STATE_A,40);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,FILL_STATE_A,42);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.fill2_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,FILL_STATE_B,41);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,FILL_STATE_B,40);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,FILL_STATE_B,42);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.fill3_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,FILL_STATE_C,41);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,FILL_STATE_C,40);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,FILL_STATE_C,42);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.fill4_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,FILL_STATE_D,41);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,FILL_STATE_D,40);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,FILL_STATE_D,42);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.pump_ph_state) {
-                        case 0:
-                                sprintf(str_name,PUMP_STATE_PH,41);
+                        case MODE_OFF:
+                                sprintf(str_name,PUMP_STATE_PH,68);
                                 send_tft(str_name);
                                 break;
-                        case 1:
-                                sprintf(str_name,PUMP_STATE_PH,40);
+                        case MODE_ON:
+                                sprintf(str_name,PUMP_STATE_PH,65);
                                 send_tft(str_name);
                                 break;
-                        case 2:
-                                sprintf(str_name,PUMP_STATE_PH,42);
+                        case MODE_AUTO:
+                                sprintf(str_name,PUMP_STATE_PH,66);
+                                send_tft(str_name);
+                                break;
+                        case MODE_TIME:
+                                sprintf(str_name,PUMP_STATE_PH,67);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.solenoide_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,SOLENOIDE_STATE,68);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,SOLENOIDE_STATE,65);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,SOLENOIDE_STATE,66);
                                 send_tft(str_name);
                                 break;
-                        case 3:
+                        case MODE_TIME:
                                 sprintf(str_name,SOLENOIDE_STATE,67);
                                 send_tft(str_name);
                                 break;
                         }
 
                         switch (_environment.pump_water_state) {
-                        case 0:
+                        case MODE_OFF:
                                 sprintf(str_name,PUMP_WATER_STATE,41);
                                 send_tft(str_name);
                                 break;
-                        case 1:
+                        case MODE_ON:
                                 sprintf(str_name,PUMP_WATER_STATE,40);
                                 send_tft(str_name);
                                 break;
-                        case 2:
+                        case MODE_AUTO:
                                 sprintf(str_name,PUMP_WATER_STATE,42);
                                 send_tft(str_name);
                                 break;
@@ -2112,15 +2258,15 @@ static void RECV_CALL_TFT(void *pvParameter)
                         case 1:
                                 printf("PUMP_FILL_1 (A)\n");
                                 switch (dtmp[2]) {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_FILL_1 (A) to mode OFF\n");
                                         SETFILL(PUMP_A,false,"PUMP_A_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_FILL_1 (A) to mode ON\n");
                                         SETFILL(PUMP_A,true,"PUMP_A_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_FILL_1 (A) to mode AUTO\n");
                                         SETFILL(PUMP_A,false,"PUMP_A_OFF");
                                         expression_task = fer_ok;
@@ -2131,15 +2277,15 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 break;
                         case 2:
                                 switch (dtmp[2]) {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_FILL_2 (B) to mode OFF\n");
                                         SETFILL(PUMP_B,false,"PUMP_B_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_FILL_2 (B) to mode ON\n");
                                         SETFILL(PUMP_B,true,"PUMP_B_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_FILL_2 (B) to mode AUTO\n");
                                         SETFILL(PUMP_B,false,"PUMP_B_OFF");
                                         expression_task = fer_ok;
@@ -2150,15 +2296,15 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 break;
                         case 3:
                                 switch (dtmp[2]) {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_FILL_3 (C) to mode OFF\n");
                                         SETFILL(PUMP_C,false,"PUMP_C_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_FILL_3 (C) to mode ON\n");
                                         SETFILL(PUMP_C,true,"PUMP_C_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_FILL_3 (C) to mode AUTO\n");
                                         SETFILL(PUMP_C,false,"PUMP_C_OFF");
                                         expression_task = fer_ok;
@@ -2169,15 +2315,15 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 break;
                         case 4:
                                 switch (dtmp[2]) {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_FILL_4 (D) to mode OFF\n");
                                         SETFILL(PUMP_D,false,"PUMP_D_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_FILL_4 (D) to mode ON\n");
                                         SETFILL(PUMP_D,true,"PUMP_D_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_FILL_4 (D) to mode AUTO\n");
                                         SETFILL(PUMP_D,false,"PUMP_D_OFF");
                                         expression_task = fer_ok;
@@ -2188,17 +2334,23 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 break;
                         case 5:
                                 switch (dtmp[2]) {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_FILL_PH to mode OFF\n");
                                         SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_FILL_PH to mode ON\n");
                                         SETFILL(PUMP_PH,true,"PUMP_PH_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_FILL_PH to mode AUTO\n");
                                         SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ph = true;
+                                        break;
+                                case MODE_TIME:
+                                        printf("PUMP_FILL_PH to mode TIME\n");
+                                        SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
                                         expression_task = fer_ok;
                                         start_dosing_ph = true;
                                         break;
@@ -2208,20 +2360,19 @@ static void RECV_CALL_TFT(void *pvParameter)
                         case 6:
                                 switch (dtmp[2])
                                 {
-                                case 0:
+                                case MODE_OFF:
                                         printf("SOLENOIDE to mode OFF\n");
                                         SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("SOLENOIDE to mode ON\n");
                                         SETFILL(SOLENOIDE, true,"SOLENOIDE_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("SOLENOIDE to mode AUTO\n");
                                         SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                         break;
-
-                                case 3:
+                                case MODE_TIME:
                                         printf("SOLENOIDE to mode TIME\n");
                                         SETFILL(SOLENOIDE, false,"SOLENOIDE_OFF");
                                         break;
@@ -2231,20 +2382,174 @@ static void RECV_CALL_TFT(void *pvParameter)
                         case 7:
                                 switch (dtmp[2])
                                 {
-                                case 0:
+                                case MODE_OFF:
                                         printf("PUMP_WATER to mode OFF\n");
                                         SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
                                         break;
-                                case 1:
+                                case MODE_ON:
                                         printf("PUMP_WATER to mode ON\n");
                                         SETFILL(ON_OFF_P1, true,"PUMP_WATER_ON");
                                         break;
-                                case 2:
+                                case MODE_AUTO:
                                         printf("PUMP_WATER to mode AUTO\n");
                                         SETFILL(ON_OFF_P1, false,"PUMP_WATER_OFF");
                                         break;
                                 }
                                 _environment.pump_water_state = dtmp[2];
+                                break;
+                        }
+                        save_environment(_environment);
+                        break;
+
+                case PAGE_DUTYCYCLE:
+                        // printf("case PAGE_DUTYCYCLE\n");
+                        switch (dtmp[1]) {
+                        case 1:
+                                printf("case PAGE_DUTYCYCLE ferA\n");
+                                sprintf(str_name,TFT_SET_DUTY,_environment.fill1_duty);
+                                send_tft(str_name);
+                                break;
+                        case 2:
+                                printf("case PAGE_DUTYCYCLE ferB\n");
+                                sprintf(str_name,TFT_SET_DUTY,_environment.fill2_duty);
+                                send_tft(str_name);
+                                break;
+                        case 3:
+                                printf("case PAGE_DUTYCYCLE ferC\n");
+                                sprintf(str_name,TFT_SET_DUTY,_environment.fill3_duty);
+                                send_tft(str_name);
+                                break;
+                        case 4:
+                                printf("case PAGE_DUTYCYCLE ferD\n");
+                                sprintf(str_name,TFT_SET_DUTY,_environment.fill4_duty);
+                                send_tft(str_name);
+                                break;
+                        case 5:
+                                printf("case PAGE_DUTYCYCLE pH\n");
+                                sprintf(str_name,TFT_SET_DUTY,_environment.pump_ph_duty);
+                                send_tft(str_name);
+                                break;
+                        }
+                        break;
+
+                case SET_DUTYCYCLE:
+                        // printf("case SET_DUTYCYCLE\n");
+                        switch (dtmp[1]) {
+                        case 1:
+                                printf("case SET_DUTYCYCLE ferA\n");
+                                _environment.fill1_duty = dtmp[2];
+
+                                switch (_environment.fill1_state) {
+                                case MODE_OFF:
+                                        printf("PUMP_FILL_A to mode OFF\n");
+                                        SETFILL(PUMP_A,false,"PUMP_A_OFF");
+                                        break;
+                                case MODE_ON:
+                                        printf("PUMP_FILL_A to mode ON\n");
+                                        SETFILL(PUMP_A,true,"PUMP_A_ON");
+                                        break;
+                                case MODE_AUTO:
+                                        printf("PUMP_FILL_A to mode AUTO\n");
+                                        SETFILL(PUMP_A,false,"PUMP_A_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ec = true;
+                                        break;
+                                }
+
+                                break;
+                        case 2:
+                                printf("case SET_DUTYCYCLE ferB\n");
+                                _environment.fill2_duty = dtmp[2];
+
+                                switch (_environment.fill2_state) {
+                                case MODE_OFF:
+                                        printf("PUMP_FILL_B to mode OFF\n");
+                                        SETFILL(PUMP_B,false,"PUMP_B_OFF");
+                                        break;
+                                case MODE_ON:
+                                        printf("PUMP_FILL_B to mode ON\n");
+                                        SETFILL(PUMP_B,true,"PUMP_B_ON");
+                                        break;
+                                case MODE_AUTO:
+                                        printf("PUMP_FILL_B to mode AUTO\n");
+                                        SETFILL(PUMP_B,false,"PUMP_B_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ec = true;
+                                        break;
+                                }
+
+                                break;
+                        case 3:
+                                printf("case SET_DUTYCYCLE ferC\n");
+                                _environment.fill3_duty = dtmp[2];
+
+                                switch (_environment.fill3_state) {
+                                case MODE_OFF:
+                                        printf("PUMP_FILL_C to mode OFF\n");
+                                        SETFILL(PUMP_C,false,"PUMP_C_OFF");
+                                        break;
+                                case MODE_ON:
+                                        printf("PUMP_FILL_C to mode ON\n");
+                                        SETFILL(PUMP_C,true,"PUMP_C_ON");
+                                        break;
+                                case MODE_AUTO:
+                                        printf("PUMP_FILL_C to mode AUTO\n");
+                                        SETFILL(PUMP_C,false,"PUMP_C_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ec = true;
+                                        break;
+                                }
+
+                                break;
+                        case 4:
+                                printf("case SET_DUTYCYCLE ferD\n");
+                                _environment.fill4_duty = dtmp[2];
+
+                                switch (_environment.fill4_state) {
+                                case MODE_OFF:
+                                        printf("PUMP_FILL_D to mode OFF\n");
+                                        SETFILL(PUMP_D,false,"PUMP_D_OFF");
+                                        break;
+                                case MODE_ON:
+                                        printf("PUMP_FILL_D to mode ON\n");
+                                        SETFILL(PUMP_D,true,"PUMP_D_ON");
+                                        break;
+                                case MODE_AUTO:
+                                        printf("PUMP_FILL_D to mode AUTO\n");
+                                        SETFILL(PUMP_D,false,"PUMP_D_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ec = true;
+                                        break;
+                                }
+
+                                break;
+                        case 5:
+                                printf("case SET_DUTYCYCLE pH\n");
+                                _environment.pump_ph_duty = dtmp[2];
+
+                                switch (_environment.pump_ph_state) {
+                                case MODE_OFF:
+                                        printf("PUMP_FILL_PH to mode OFF\n");
+                                        SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
+                                        break;
+                                case MODE_ON:
+                                        printf("PUMP_FILL_PH to mode ON\n");
+                                        SETFILL(PUMP_PH,true,"PUMP_PH_ON");
+                                        break;
+                                case MODE_AUTO:
+                                        printf("PUMP_FILL_PH to mode AUTO\n");
+                                        SETFILL(PUMP_PH,false,"PUMP_PH_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ph = true;
+                                        break;
+                                case MODE_TIME:
+                                        printf("PUMP_FILL_PH to mode TIME\n");
+                                        SETFILL(PUMP_PH, false,"PUMP_PH_OFF");
+                                        expression_task = fer_ok;
+                                        start_dosing_ph = true;
+                                        break;
+                                }
+
                                 break;
                         }
                         save_environment(_environment);
@@ -2257,13 +2562,13 @@ static void RECV_CALL_TFT(void *pvParameter)
                         sprintf(tft_val, "EC %.2f", ec_read(ec_val_plot));
                         sprintf(str_name, INFO_BUFF_EC, tft_val);
                         send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         sprintf(tft_val, "Analog %d", ec_val_plot);
                         sprintf(str_name, INFO_BUFF_EC, tft_val);
                         send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         ec_calibration(ec_val_plot, 1);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         ec_calibration(ec_val_plot, 2);
 
                         break;
@@ -2275,13 +2580,13 @@ static void RECV_CALL_TFT(void *pvParameter)
                         sprintf(tft_val, "pH %.2f", ph_value);
                         sprintf(str_name, INFO_BUFF_PH, tft_val);
                         send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         sprintf(tft_val, "Analog %.2f", adc_reading_buff);
                         sprintf(str_name, INFO_BUFF_PH, tft_val);
                         send_tft(str_name);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         calibration(adc_reading_buff, 1);
-                        vTaskDelay(1000 / portTICK_RATE_MS);
+                        vTaskDelay(500 / portTICK_RATE_MS);
                         calibration(adc_reading_buff, 2);
                         break;
 
@@ -2310,8 +2615,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 {
                                         uint16_t val = dtmp[3] * 256 + dtmp[2];
                                         ph_val.PH_4_VOL = ((float)val/10);
-                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-100.00;
-                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+100.00;
+                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-25.00;
+                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+25.00;
                                         printf("case SET_VOLTAGE_PH 4 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
                                                ph_val.PH_4_VOL,ph_val.PH_3_VOL);
                                 }
@@ -2319,8 +2624,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 {
                                         uint32_t val = ((dtmp[4]*65536) + (dtmp[3]* 256)) + dtmp[2];
                                         ph_val.PH_4_VOL = ((float)val/100);
-                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-100.00;
-                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+100.00;
+                                        ph_val.PH_5_VOL = ph_val.PH_4_VOL-25.00;
+                                        ph_val.PH_3_VOL = ph_val.PH_4_VOL+25.00;
                                         printf("case SET_VOLTAGE_PH 4 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
                                                ph_val.PH_4_VOL,ph_val.PH_3_VOL);
                                 }
@@ -2332,8 +2637,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 {
                                         uint16_t val = dtmp[3] * 256 + dtmp[2];
                                         ph_val.PH_7_VOL = ((float)val/10);
-                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-100.00;
-                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+100.00;
+                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-25.00;
+                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+25.00;
                                         printf("case SET_VOLTAGE_PH 7 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
                                                ph_val.PH_7_VOL,ph_val.PH_6_VOL);
                                 }
@@ -2341,8 +2646,8 @@ static void RECV_CALL_TFT(void *pvParameter)
                                 {
                                         uint32_t val = ((dtmp[4]*65536) + (dtmp[3]* 256)) + dtmp[2];
                                         ph_val.PH_7_VOL = ((float)val/100);
-                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-100.00;
-                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+100.00;
+                                        ph_val.PH_8_VOL = ph_val.PH_7_VOL-25.00;
+                                        ph_val.PH_6_VOL = ph_val.PH_7_VOL+25.00;
                                         printf("case SET_VOLTAGE_PH 7 [>256] --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
                                                ph_val.PH_7_VOL,ph_val.PH_6_VOL);
                                 }
@@ -2505,10 +2810,12 @@ TO_SCAN_NETWORK:
                         }
 
                         break;
+
                 case UPDATE_ESP32:
                         printf("case UPDATE_ESP32\n");
                         ota_http();
                         break;
+
                 case UPDATE_TFT:
                         printf("case UPDATE_TFT\n");
                         sprintf(str_name, CONNECT_TFT);
@@ -2548,12 +2855,14 @@ TO_SCAN_NETWORK:
                         send_tft(str_name);
 
                         break;
+
                 case PAGE_DEBUG:
                         printf("case PAGE_DEBUG\n");
                         read_statuspg(&status_pg);
                         sprintf(str_name, DEVICE_NO, status_pg.mydevice_no);
                         send_tft(str_name);
                         break;
+
                 case DEBUG_SETMQTT:
                         printf("case DEBUG_SETMQTT\n");
                         status_pg.mydevice_no = dtmp[1];
@@ -2634,23 +2943,22 @@ void app_main()
         }
 
         //I2C MODE
-
-        pca9685_init(); /* init i2c pca9685 */
-        enable_pca9685_1();
+        pca9685_init();               /* init i2c pca9685 */
+        PCA9685_ADDR = 0x41;
         setFrequencyPCA9685(1000);
         turnAllOff();
-        enable_pca9685_2();
+        PCA9685_ADDR = 0x42;
         setFrequencyPCA9685(1000);
         turnAllOff();
 
-        ds1307_init(); /* init i2c ds1307 */
-        temp_init();                 /* init i2c hdc1080 */
+        ds1307_init();                /* init i2c ds1307 */
+        temp_init();                  /* init i2c hdc1080 */
 
-        scan_i2c();            /* scan i2c */
+        scan_i2c();                  /* scan i2c */
 
         //ANALOG MODE
-        init_ph(); /* init ph */
-        ec_add_val(); /* init ec */
+        init_ph();                    /* init ph */
+        ec_add_val();                  /* init ec */
 
         //DIGITAL MODE
         app_buzzer_cfg(); /* init buzzer */

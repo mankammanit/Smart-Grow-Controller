@@ -26,6 +26,11 @@
 static char tag[] = "pca9685";
 uint8_t PCA9685_ADDR = 0x0;
 
+//value pump duty
+#define value_dutyhigh 4096
+#define value_dutymedium 1000
+#define value_dutylow 2000
+
 const uint16_t pwmTable[256] = {0, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 14, 14, 15, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 21, 21, 22, 22, 23, 24, 24, 25, 26, 27, 27, 28, 29, 30, 31, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48, 49, 51, 52, 54, 55, 57, 59, 60, 62, 64, 66, 68, 69, 71, 74, 76, 78, 80, 82, 85, 87, 90, 92, 95, 98, 100, 103, 106, 109, 112, 116, 119, 122, 126, 130, 133, 137, 141, 145, 149, 153, 158, 162, 167, 172, 177, 182, 187, 193, 198, 204, 210, 216, 222, 228, 235, 241, 248, 255, 263, 270, 278, 286, 294, 303, 311, 320, 330, 339, 349, 359, 369, 380, 391, 402, 413, 425, 437, 450, 463, 476, 490, 504, 518, 533, 549, 564, 581, 597, 614, 632, 650, 669, 688, 708, 728, 749, 771, 793, 816, 839, 863, 888, 913, 940, 967, 994, 1023, 1052, 1082, 1114, 1146, 1178, 1212, 1247, 1283, 1320, 1358, 1397, 1437, 1478, 1520, 1564, 1609, 1655, 1703, 1752, 1802, 1854, 1907, 1962, 2018, 2076, 2135, 2197, 2260, 2325, 2391, 2460, 2531, 2603, 2678, 2755, 2834, 2916, 2999, 3085, 3174, 3265, 3359, 3455, 3555, 3657, 3762, 3870, 3981, 4095};
 
 //function map kammanit 0-4095
@@ -91,7 +96,8 @@ esp_err_t resetPCA9685(void)
 esp_err_t generic_write_i2c_register_two_words(uint8_t regaddr, uint16_t valueOn, uint16_t valueOff)
 {
         esp_err_t ret;
-
+retry_read:
+        ;
         i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, (PCA9685_ADDR << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
@@ -102,6 +108,32 @@ esp_err_t generic_write_i2c_register_two_words(uint8_t regaddr, uint16_t valueOn
         i2c_master_write_byte(cmd, valueOff >> 8, NACK_VAL);
         i2c_master_stop(cmd);
         ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_PERIOD_MS);
+
+        switch (ret)
+        {
+        case ESP_OK:
+                // ESP_LOGI(tag, "writeValue OK");
+                break;
+        case ESP_ERR_INVALID_ARG:
+                ESP_LOGE(tag, "Parameter error");
+                goto retry_read;
+                break;
+        case ESP_FAIL:
+                ESP_LOGE(tag, "Sending command error, slave doesn’t ACK the transfer.");
+                goto retry_read;
+                break;
+        case ESP_ERR_INVALID_STATE:
+                ESP_LOGE(tag, "I2C driver not installed or not in master mode.");
+                break;
+        case ESP_ERR_TIMEOUT:
+                ESP_LOGE(tag, "Operation timeout because the bus is busy.");
+                goto retry_read;
+                break;
+        default:
+                ESP_LOGE(tag, "NO CASE");
+                break;
+        }
+
         i2c_cmd_link_delete(cmd);
 
         return ret;
@@ -514,11 +546,9 @@ void pca9685_init(void)
 void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
                 uint8_t num4,
                 uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4,char* info)
-
 {
         printf("-------------------------------------------------------WORK'S %s\n",info);
-        
-        // enable_pca9685_1();
+
         if (b1 == 255)
                 b1 = 0;
         if (b2 == 255)
@@ -528,31 +558,127 @@ void set_bright(uint8_t num1, uint8_t num2, uint8_t num3,
         if (b4 == 255)
                 b4 = 0;
 
-        enable_pca9685_1();
-        if(b1==0) setPWM(num1, 4096, 0);
-        else setPWM(num1, map(b1), 0);
+        PCA9685_ADDR = 0x41;
+        if(PCA9685_ADDR == 0x41)
+        {
+                if(b1==0) setPWM(num1, 4096, 0);
+                else setPWM(num1, map(b1), 0);
 
-        if(b2==0) setPWM(num2, 4096, 0);
-        else setPWM(num2, map(b2), 0);
+                if(b2==0) setPWM(num2, 4096, 0);
+                else setPWM(num2, map(b2), 0);
 
-        if(b3==0) setPWM(num3, 4096, 0);
-        else setPWM(num3, map(b3), 0);
+                if(b3==0) setPWM(num3, 4096, 0);
+                else setPWM(num3, map(b3), 0);
 
-        if(b4==0) setPWM(num4, 4096, 0);
-        else setPWM(num4, map(b4), 0);
-
+                if(b4==0) setPWM(num4, 4096, 0);
+                else setPWM(num4, map(b4), 0);
+        }
         // esp_mqtt_publish_string("DEBUG_BRIGHT",info);
-
 }
 
-
-//led
-void enable_pca9685_1()
+//use fill
+void SETFILL(uint8_t pin, bool val,char* info)
 {
-        set_pca9685_adress(I2C_ADDRESS_1);
-}
-//environment
-void enable_pca9685_2()
-{
-        set_pca9685_adress(I2C_ADDRESS_2);
+        printf("-------------------------------------------------------WORK'S %s\n",info);
+        PCA9685_ADDR = 0x42;
+        if(PCA9685_ADDR == 0x42)
+        {
+                if (val) {
+                        if(pin==PUMP_A)
+                        {
+                                switch (_environment.fill1_duty) {
+                                case DUTY_LOW:
+                                        printf("Set LOW ferA\n");
+                                        setPWM(pin, value_dutylow, 0);
+                                        break;
+                                case DUTY_MEDIUM:
+                                        printf("Set MEIDUM ferA\n");
+                                        setPWM(pin, value_dutymedium, 0);
+                                        break;
+                                case DUTY_HIGH:
+                                        printf("Set HIGH ferA\n");
+                                        setPWM(pin, value_dutyhigh, 0);
+                                        break;
+                                }
+                        }
+                        else if(pin==PUMP_B)
+                        {
+                                switch (_environment.fill2_duty) {
+                                case DUTY_LOW:
+                                        printf("Set LOW ferB\n");
+                                        setPWM(pin, 2048, 0);
+                                        break;
+                                case DUTY_MEDIUM:
+                                        printf("Set MEIDUM ferB\n");
+                                        setPWM(pin, 3072, 0);
+                                        break;
+                                case DUTY_HIGH:
+                                        printf("Set HIGH ferB\n");
+                                        setPWM(pin, 4096, 0);
+                                        break;
+                                }
+                        }
+                        else if(pin==PUMP_C)
+                        {
+                                switch (_environment.fill3_duty) {
+                                case DUTY_LOW:
+                                        printf("Set LOW ferC\n");
+                                        setPWM(pin, 2048, 0);
+                                        break;
+                                case DUTY_MEDIUM:
+                                        printf("Set MEIDUM ferC\n");
+                                        setPWM(pin, 3072, 0);
+                                        break;
+                                case DUTY_HIGH:
+                                        printf("Set HIGH ferC\n");
+                                        setPWM(pin, 4096, 0);
+                                        break;
+                                }
+                        }
+                        else if(pin==PUMP_D)
+                        {
+                                switch (_environment.fill4_duty) {
+                                case DUTY_LOW:
+                                        printf("Set LOW ferD\n");
+                                        setPWM(pin, 2048, 0);
+                                        break;
+                                case DUTY_MEDIUM:
+                                        printf("Set MEIDUM ferD\n");
+                                        setPWM(pin, 3072, 0);
+                                        break;
+                                case DUTY_HIGH:
+                                        printf("Set HIGH ferD\n");
+                                        setPWM(pin, 4096, 0);
+                                        break;
+                                }
+                        }
+                        else if(pin==PUMP_PH)
+                        {
+                                switch (_environment.pump_ph_duty) {
+                                case DUTY_LOW:
+                                        printf("Set LOW pH\n");
+                                        setPWM(pin, 2048, 0);
+                                        break;
+                                case DUTY_MEDIUM:
+                                        printf("Set MEIDUM pH\n");
+                                        setPWM(pin, 3072, 0);
+                                        break;
+                                case DUTY_HIGH:
+                                        printf("Set HIGH pH\n");
+                                        setPWM(pin, 4096, 0);
+                                        break;
+                                }
+                        }
+                        else
+                        {
+                                printf("Set HIGH ONLY\n");
+                                setPWM(pin, 4096, 0);
+                        }
+                }
+                else if (!val) {
+                        printf("Set OFF ONLY\n");
+                        setPWM(pin, 0, 4096);
+                }
+        }
+        // esp_mqtt_publish_string("DEBUG_FILL",info);
 }

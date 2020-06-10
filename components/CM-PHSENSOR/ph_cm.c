@@ -227,16 +227,18 @@ void readAnalogpH()
                 }
         }
         adc_reading_ph /= NO_OF_SAMPLES;
+        
         //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading_ph, adc_chars);
-        printf("Raw: %.2f\tVoltage: %dmV\n", adc_reading_ph, voltage);
+        float voltage = esp_adc_cal_raw_to_voltage(adc_reading_ph, adc_chars);
 
-        printf("VOLTAGE_PH 4 --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
-               ph_val.PH_4_VOL,ph_val.PH_3_VOL);
-        printf("VOLTAGE_PH 7 --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
-               ph_val.PH_7_VOL,ph_val.PH_6_VOL);
-
-        printf("_neutralVoltage %.2f --> _acidVoltage %.2f\n",ph_val._neutralVoltage,ph_val._acidVoltage);
+        // printf("Raw: %.2f\tVoltage: %.2f mV\n", adc_reading_ph, voltage);
+        //
+        // printf("VOLTAGE_PH 4 --> %.2f,%.2f,%.2f\n",ph_val.PH_5_VOL,
+        //        ph_val.PH_4_VOL,ph_val.PH_3_VOL);
+        // printf("VOLTAGE_PH 7 --> %.2f,%.2f,%.2f\n",ph_val.PH_8_VOL,
+        //        ph_val.PH_7_VOL,ph_val.PH_6_VOL);
+        //
+        // printf("_neutralVoltage %.2f --> _acidVoltage %.2f\n",ph_val._neutralVoltage,ph_val._acidVoltage);
 
         if(adc_reading_ph==4095.00)
         {
@@ -244,7 +246,7 @@ void readAnalogpH()
         }
         else
         {
-                adc_reading_buff = adc_reading_ph;
+                adc_reading_buff = voltage;
                 ///////////// ph read DF Lbr//////////////////
                 ph_value = readPH(adc_reading_buff);
         }

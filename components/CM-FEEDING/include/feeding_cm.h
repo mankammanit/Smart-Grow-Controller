@@ -8,7 +8,6 @@
 
 #include <driver/i2c.h>
 #include <driver/gpio.h>
-#include "string.h"
 #include "uart_cm.h"
 #include "st_profile.h"
 #include "rtc_ds1307.h"
@@ -18,8 +17,6 @@
 #include "wifi.h"
 
 uint8_t call_water_lv();
-// void SETFILL(uint8_t pin, bool val);
-void SETFILL(uint8_t pin, bool val,char* info);
 extern float ec_value;
 extern float ph_value;
 
@@ -42,10 +39,13 @@ extern bool send_after_connect;
 extern time_t current_stamp;
 extern time_t feed_stamp;
 
+extern bool check_water_pump_on_fill_time;
+
 typedef enum {
         fer_ok=1,
         dosing_ec=2,
-        dosing_ph=3
+        dosing_ph=3,
+        dosing_ph_time=4
 } expression_t;
 extern expression_t expression_task;
 

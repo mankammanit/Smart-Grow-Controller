@@ -1,11 +1,12 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-#define FIRMWARE_ESP32 4.1
+#define FIRMWARE_ESP32 4.4
 
 //ver 0 บอร์ดรุ่นแรกงานคุณมีีน
 //ver 1 บอร์ดรุ่นสองงานคุณอ๊อฟหินบุรีรัมย์[ใช้เป็นมาตรฐาน]
 //ver 2 Special LAB b
+//ver 3 Special LAB c
 #define REVISION 1
 
 //task ec
@@ -292,6 +293,8 @@ char str_name[256];
 #define SOLENOIDE_STATE         "p5.pic=%d" TFTEND
 #define PUMP_WATER_STATE        "p6.pic=%d" TFTEND
 
+#define TFT_SET_DUTY            "cb0.val=%d" TFTEND
+
 //network
 #define SSID_TFT                "t5.txt=\"%s\"" TFTEND
 #define IP_TFT                  "t6.txt=\"%s\"" TFTEND
@@ -343,6 +346,24 @@ char str_name[256];
 #define fill_TIMERON_M4          "Fertilizer.n34.val=%d" TFTEND
 #define fill_TIMEROFF_H4         "Fertilizer.n35.val=%d" TFTEND
 #define fill_TIMEROFF_M4         "Fertilizer.n36.val=%d" TFTEND
+
+#define ph_TIMERON_H            "Fertilizer.n40.val=%d" TFTEND
+#define ph_TIMERON_M            "Fertilizer.n41.val=%d" TFTEND
+#define ph_TIMEROFF_H           "Fertilizer.n42.val=%d" TFTEND
+#define ph_TIMEROFF_M           "Fertilizer.n43.val=%d" TFTEND
+#define ph_TIMERON_H2           "Fertilizer.n44.val=%d" TFTEND
+#define ph_TIMERON_M2           "Fertilizer.n45.val=%d" TFTEND
+#define ph_TIMEROFF_H2          "Fertilizer.n46.val=%d" TFTEND
+#define ph_TIMEROFF_M2          "Fertilizer.n47.val=%d" TFTEND
+#define ph_TIMERON_H3           "Fertilizer.n48.val=%d" TFTEND
+#define ph_TIMERON_M3           "Fertilizer.n49.val=%d" TFTEND
+#define ph_TIMEROFF_H3          "Fertilizer.n50.val=%d" TFTEND
+#define ph_TIMEROFF_M3          "Fertilizer.n51.val=%d" TFTEND
+#define ph_TIMERON_H4           "Fertilizer.n52.val=%d" TFTEND
+#define ph_TIMERON_M4           "Fertilizer.n53.val=%d" TFTEND
+#define ph_TIMEROFF_H4          "Fertilizer.n54.val=%d" TFTEND
+#define ph_TIMEROFF_M4          "Fertilizer.n55.val=%d" TFTEND
+
 #define FER_TPUMP1               "Fertilizer.time1.pic=%d" TFTEND
 #define FER_TPUMP2               "Fertilizer.time2.pic=%d" TFTEND
 #define FER_TPUMP3               "Fertilizer.time3.pic=%d" TFTEND
@@ -352,6 +373,11 @@ char str_name[256];
 #define FER_TFILL2               "Fertilizer.fill1.pic=%d" TFTEND
 #define FER_TFILL3               "Fertilizer.fill2.pic=%d" TFTEND
 #define FER_TFILL4               "Fertilizer.fill3.pic=%d" TFTEND
+
+#define FER_TPH1                 "Fertilizer.ph0.pic=%d" TFTEND
+#define FER_TPH2                 "Fertilizer.ph1.pic=%d" TFTEND
+#define FER_TPH3                 "Fertilizer.ph2.pic=%d" TFTEND
+#define FER_TPH4                 "Fertilizer.ph3.pic=%d" TFTEND
 
 
 #define VERSION_FW              "x0.val=%d" TFTEND
@@ -366,12 +392,10 @@ char str_name[256];
 #define SET_RATIO_B             "n1.val=%d" TFTEND
 #define SET_RATIO_C             "n2.val=%d" TFTEND
 #define SET_RATIO_D             "n3.val=%d" TFTEND
-#define SET_EC_POINT_           "Set_fer.x0.val=%d" TFTEND
-#define SET_PH_POINT_           "Set_fer.x1.val=%d" TFTEND
-#define SET_RATIO_A_            "Set_fer.n0.val=%d" TFTEND
-#define SET_RATIO_B_            "Set_fer.n1.val=%d" TFTEND
-#define SET_RATIO_C_            "Set_fer.n2.val=%d" TFTEND
-#define SET_RATIO_D_            "Set_fer.n3.val=%d" TFTEND
+#define SET_RATIO_PH            "n37.val=%d" TFTEND
+#define WAIT_EC_                "n38.val=%d" TFTEND
+#define WAIT_PH_                "n39.val=%d" TFTEND
+
 
 #define SET_STATUS_TPUMP1       "Set_pump.sw0.val=%d" TFTEND
 #define SET_STATUS_TPUMP2       "Set_pump.sw1.val=%d" TFTEND
@@ -382,6 +406,11 @@ char str_name[256];
 #define SET_STATUS_TFILL2       "Set_fill.sw1.val=%d" TFTEND
 #define SET_STATUS_TFILL3       "Set_fill.sw2.val=%d" TFTEND
 #define SET_STATUS_TFILL4       "Set_fill.sw3.val=%d" TFTEND
+
+#define SET_STATUS_TPH1         "Set_fer.sw0.val=%d" TFTEND
+#define SET_STATUS_TPH2         "Set_fer.sw1.val=%d" TFTEND
+#define SET_STATUS_TPH3         "Set_fer.sw2.val=%d" TFTEND
+#define SET_STATUS_TPH4         "Set_fet.sw3.val=%d" TFTEND
 
 
 //DEBUG
@@ -457,6 +486,8 @@ enum tft_cmd
 
         PAGE_ENVIRONMENT                          = 0x40,
         SET_ENVIRONMENT                           = 0x41,
+        PAGE_DUTYCYCLE                            = 0x42,
+        SET_DUTYCYCLE                             = 0x43,
 
         PAGE_SETTING                              = 0x50,
         ERASE_FLASH                               = 0x51,
@@ -478,11 +509,57 @@ enum tft_cmd
         SET_CALIBRATE_PH                          = 0x63,
         PAGE_VOLTAGE_PH                           = 0x6a,
         SET_VOLTAGE_PH                            = 0x6b,
+        PAGE_CALIBRATE_PUMP                       = 0x6c,
+        SET_CALIBRATE_PUMP                        = 0x6d,
 
         PAGE_COMMUNITY                            = 0x7a,
 
         PAGE_DEBUG                                = 0x90,
         DEBUG_SETMQTT                             = 0x91,
+
+};
+
+enum mode_work
+{
+        ENABLE                            = 1,
+        DISABLE                           = 0,
+
+        //mode working
+        MODE_OFF                          = 0,
+        MODE_ON                           = 1,
+        MODE_AUTO                         = 2,
+        MODE_TIME                         = 3,
+
+        //dutycycle
+        DUTY_LOW                          = 0,
+        DUTY_MEDIUM                       = 1,
+        DUTY_HIGH                         = 2,
+
+        //Water_LV
+        LV_VERYLOW                        = 0,
+        LV_LOW                            = 1,
+        LV_MEDIUM                         = 2,
+        LV_HIGH                           = 3,
+
+        //mode lighting
+        LIGHT_MANUAL                      = 0,
+        LIGHT_AUTO                        = 1,
+
+        //STAGE
+        WORK_MANUAL                       = 0,
+        WORK_PGSTAGE1                     = 1,
+        WORK_PGSTAGE2                     = 2,
+        WORK_PGSTAGE3                     = 3,
+
+        //WATER PUMP
+        WATERPUMP_TIMEOFF                 = 0,
+        WATERPUMP_TIME1                   = 1,
+        WATERPUMP_TIME2                   = 2,
+        WATERPUMP_TIME3                   = 3,
+        WATERPUMP_TIME4                   = 4,
+        WATERPUMP_ON                      = 5,
+        WATERPUMP_OFF                     = 6,
+
 
 };
 

@@ -72,6 +72,15 @@ typedef struct
         uint8_t ec_set_point;
         uint8_t ph_set_point;
         uint8_t ratio_fer[4];
+        uint8_t ratio_ph;
+        uint8_t wait_ec;
+        uint8_t wait_ph;
+        uint8_t ph_working_on_h[4];
+        uint8_t ph_working_on_m[4];
+        uint8_t ph_working_off_h[4];
+        uint8_t ph_working_off_m[4];
+        uint8_t ph_status_timer[4];
+
 } ferti_set;
 ferti_set ferti_set_val;
 
@@ -128,7 +137,7 @@ timepg time_pg;
 /////////////////////////////////////////////
 typedef struct environment
 {
-        //water
+        //mode on-off-auto --> 0,1,2
         uint8_t fill1_state;
         uint8_t fill2_state;
         uint8_t fill3_state;
@@ -136,6 +145,19 @@ typedef struct environment
         uint8_t pump_ph_state;
         uint8_t solenoide_state;
         uint8_t pump_water_state;
+
+        //dutycycle low-medium-high --> 0,1,2
+        uint8_t fill1_duty;
+        uint8_t fill2_duty;
+        uint8_t fill3_duty;
+        uint8_t fill4_duty;
+        uint8_t pump_ph_duty;
+
+        //calibration fill1-4 (EC)
+        uint16_t fill1_caribrate;
+        uint16_t fill2_caribrate;
+        uint16_t fill3_caribrate;
+        uint16_t fill4_caribrate;
 
 } environment;
 environment _environment;

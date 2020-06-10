@@ -54,12 +54,10 @@ static void initI2C() {
             break;
     case ESP_ERR_INVALID_ARG:
             ESP_LOGE(tag, "Parameter error");
-            vTaskDelay( 1000 / portTICK_RATE_MS );
             goto retry_read;
             break;
     case ESP_FAIL:
             ESP_LOGE(tag, "Sending command error, slave doesn’t ACK the transfer.");
-            vTaskDelay( 1000 / portTICK_RATE_MS );
             goto retry_read;
             break;
     case ESP_ERR_INVALID_STATE:
@@ -67,7 +65,6 @@ static void initI2C() {
             break;
     case ESP_ERR_TIMEOUT:
             ESP_LOGE(tag, "Operation timeout because the bus is busy.");
-            vTaskDelay( 1000 / portTICK_RATE_MS );
             goto retry_read;
             break;
     default:
@@ -111,12 +108,10 @@ static void initI2C() {
             break;
     case ESP_ERR_INVALID_ARG:
             ESP_LOGE(tag, "Parameter error");
-            vTaskDelay( 500 / portTICK_RATE_MS );
             goto retry_read;
             break;
     case ESP_FAIL:
             ESP_LOGE(tag, "Sending command error, slave doesn’t ACK the transfer.");
-            vTaskDelay( 500 / portTICK_RATE_MS );
             goto retry_read;
             break;
     case ESP_ERR_INVALID_STATE:
@@ -124,7 +119,6 @@ static void initI2C() {
             break;
     case ESP_ERR_TIMEOUT:
             ESP_LOGE(tag, "Operation timeout because the bus is busy.");
-            vTaskDelay( 500 / portTICK_RATE_MS );
             goto retry_read;
             break;
     default:

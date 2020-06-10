@@ -710,13 +710,27 @@ void load_default_nvs()
         }
         save_program(time_pg);
 
-        _environment.fill1_state=0;
-        _environment.fill2_state=0;
-        _environment.fill3_state=0;
-        _environment.fill4_state=0;
-        _environment.pump_ph_state=0;
-        _environment.solenoide_state=0;
-        _environment.pump_water_state=0;
+        //mode off default
+        _environment.fill1_state=MODE_OFF;
+        _environment.fill2_state=MODE_OFF;
+        _environment.fill3_state=MODE_OFF;
+        _environment.fill4_state=MODE_OFF;
+        _environment.pump_ph_state=MODE_OFF;
+        _environment.solenoide_state=MODE_OFF;
+        _environment.pump_water_state=MODE_OFF;
+
+        //dutycycle high default
+        _environment.fill1_duty=DUTY_HIGH;
+        _environment.fill2_duty=DUTY_HIGH;
+        _environment.fill3_duty=DUTY_HIGH;
+        _environment.fill4_duty=DUTY_HIGH;
+        _environment.pump_ph_duty=DUTY_HIGH;
+
+        //calibration fill1-4 (EC)
+        _environment.fill1_caribrate=1;
+        _environment.fill2_caribrate=1;
+        _environment.fill3_caribrate=1;
+        _environment.fill4_caribrate=1;
         save_environment(_environment);
 
         ferti_set_val.ec_set_point = 12;
@@ -724,9 +738,36 @@ void load_default_nvs()
         for (uint8_t i = 0; i < 4; i++)
         {
                 ferti_set_val.ratio_fer[i] = 1;
-                ferti_set_val.ratio_fer[i] = 1;
-                ferti_set_val.ratio_fer[i] = 1;
         }
+        ferti_set_val.ph_working_on_h[0] = 8;
+        ferti_set_val.ph_working_on_m[0] = 0;
+        ferti_set_val.ph_working_off_h[0] = 8;
+        ferti_set_val.ph_working_off_m[0] = 10;
+
+        ferti_set_val.ph_working_on_h[1] = 9;
+        ferti_set_val.ph_working_on_m[1] = 0;
+        ferti_set_val.ph_working_off_h[1] = 9;
+        ferti_set_val.ph_working_off_m[1] = 10;
+
+        ferti_set_val.ph_working_on_h[2] = 10;
+        ferti_set_val.ph_working_on_m[2] = 0;
+        ferti_set_val.ph_working_off_h[2] = 10;
+        ferti_set_val.ph_working_off_m[2] = 10;
+
+        ferti_set_val.ph_working_on_h[3] = 11;
+        ferti_set_val.ph_working_on_m[3] = 0;
+        ferti_set_val.ph_working_off_h[3] = 11;
+        ferti_set_val.ph_working_off_m[3] = 10;
+
+        ferti_set_val.ph_status_timer[0] = 0;
+        ferti_set_val.ph_status_timer[1] = 0;
+        ferti_set_val.ph_status_timer[2] = 0;
+        ferti_set_val.ph_status_timer[3] = 0;
+
+        ferti_set_val.ratio_ph = 1;
+        ferti_set_val.wait_ph = 10;
+        ferti_set_val.wait_ec = 10;
+
         save_ferti(ferti_set_val);
 
         working_timer.working_on_h[0] = 8;
